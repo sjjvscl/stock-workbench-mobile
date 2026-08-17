@@ -690,6 +690,13 @@ function renderTianti(){
 }
 
 function renderThemes(){
+  (DATA.tianti||[]).forEach(r=>{
+    const k = r.kline;
+    if(k && k.daily && k.daily.length){
+      KMAP[String(r.code)] = {name:r.name, code:r.code, daily:k.daily||[], intraday:k.intraday||[], prev_close:k.prev_close, limit_price:k.limit_price, minutesByDate:{}, curMinDate:null};
+      if(k.intraday && k.intraday.length && DATA.date) KMAP[String(r.code)].minutesByDate[DATA.date] = k.intraday;
+    }
+  });
   const th = (DATA.themes||[]).slice().sort((a,b)=>(b.zt_count||0)-(a.zt_count||0));
   if(!th.length){el("themes").innerHTML='<div class="empty">暂无板块数据</div>';return;}
   const nd = DATA.next_day || "T+1";
