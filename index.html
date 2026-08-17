@@ -689,6 +689,42 @@ function renderTianti(){
   el("tianti").innerHTML = html;
 }
 
+function themeGroupName(name){
+  const s = String(name||"");
+  if(/预增|预盈|增长|扭亏|减亏|年报|中报|半年报|一季报|一季度|季报|业绩/.test(s)) return "业绩";
+  if(/回购/.test(s)) return "回购";
+  if(/定增/.test(s)) return "定增";
+  if(/机器人/.test(s)) return "机器人";
+  if(/CPO|光模块|光通信|光器件/.test(s)) return "CPO/光模块";
+  if(/算力|数据中心|IDC|AIDC|液冷|服务器/.test(s)) return "算力/数据中心";
+  if(/PCB|覆铜板/.test(s)) return "PCB/覆铜板";
+  return s;
+}
+
+function groupedThemes(){
+  const map = {};
+  (DATA.themes||[]).forEach(t=>{
+    const key = themeGroupName(t.name);
+    const g = map[key] = map[key] || {name:key, stocks:[], byCode:{}};
+    (t.stocks||[]).forEach(s=>{
+      const code = String(s.code||"");
+      if(!code || g.byCode[code]) return;
+      g.byCode[code] = s;
+      g.stocks.push(s);
+    });
+  });
+  return Object.keys(map).map(k=>{
+    const g = map[k];
+    const prems = g.stocks.map(s=>s.next_premium).filter(v=>v!=null);
+    return {
+      name:g.name,
+      zt_count:g.stocks.length,
+      avg_premium: prems.length ? prems.reduce((a,b)=>a+b,0)/prems.length : null,
+      stocks:g.stocks,
+    };
+  }).sort((a,b)=>(b.zt_count||0)-(a.zt_count||0));
+}
+
 function renderThemes(){
   (DATA.tianti||[]).forEach(r=>{
     const k = r.kline;
@@ -697,7 +733,7 @@ function renderThemes(){
       if(k.intraday && k.intraday.length && DATA.date) KMAP[String(r.code)].minutesByDate[DATA.date] = k.intraday;
     }
   });
-  const th = (DATA.themes||[]).slice().sort((a,b)=>(b.zt_count||0)-(a.zt_count||0));
+  const th = groupedThemes();
   if(!th.length){el("themes").innerHTML='<div class="empty">暂无板块数据</div>';return;}
   const nd = DATA.next_day || "T+1";
   el("themes").innerHTML = th.slice(0,12).map((t,idx)=>{
