@@ -125,6 +125,7 @@
   details.theme[open]>summary::before{content:"▾"}
   details.theme>summary .tcount{color:var(--red);font-weight:700;font-size:12px}
   details.theme.overlay-theme{border-style:dashed;border-color:#e2b96a;background:#fffdf7}
+  .tag-yj{background:#fff4e0;color:#a86b00}
   .tstk{margin-top:8px;font-size:12px}
   .tstk th,.tstk td{padding:4px 6px;border-bottom:1px solid var(--border)}
   .tstk th{position:static;background:transparent;font-size:10.5px}
@@ -600,10 +601,11 @@ function tiantiRowHtml(r){
     : (r.signal
         ? `<span class="tag tag-sig">${r.signal}</span>`
         : '');
+  const yjHtml = hasYj(r)?'<span class="tag tag-yj" title="业绩题材叠加，加分项">业绩+</span>':'';
   return `<tr${clk} data-code="${r.code}" data-ws="${r.weak_strong?1:0}" data-open="${r.open_times||0}" data-hard="${/硬板|一字|秒板/.test(r.signal||"")?1:0}">
     <td class="lbc ${r.lbc>=5?'zt':''}" style="cursor:help" title="同花顺原值: ${r.lbc_raw||r.lbc}板 (${r.desc||''}) · 连续板数: ${r.lbc}板${r.is_fanbao?' (反包)':''}">${r.board_label||(r.lbc==0?'首板':r.lbc+'板')}${r.is_fanbao?' <span class="fb">反包</span>':''}</td>
     <td class="c-name">
-      <div class="name-line"><b class="stockname">${r.name||"—"}</b>${coreHtml}${hasK?' <span class="kbtn" title="点击看日K线/分时">📈</span>':''}<span class="tag tag-theme">${r.theme||"—"}</span></div>
+      <div class="name-line"><b class="stockname">${r.name||"—"}</b>${coreHtml}${yjHtml}${hasK?' <span class="kbtn" title="点击看日K线/分时">📈</span>':''}<span class="tag tag-theme">${r.theme||"—"}</span></div>
     </td>
     <td class="c-reason"><div class="reason-chips">${reasonHtml}</div></td>
     <td>${fmt(r.fengdan)}</td>
@@ -704,6 +706,9 @@ function renderTianti(){
   el("tianti").innerHTML = html;
 }
 
+function isYjText(s){ return /预增|预盈|增长|扭亏|减亏|年报|中报|半年报|一季报|一季度|季报|业绩/.test(String(s||"")); }
+function hasYj(r){ return isYjText(r&&r.reason) || isYjText(r&&r.theme); }
+
 function themeGroupName(name){
   const s = String(name||"");
   if(/预增|预盈|增长|扭亏|减亏|年报|中报|半年报|一季报|一季度|季报|业绩/.test(s)) return "业绩";
@@ -720,6 +725,7 @@ function groupedThemes(){
   const map = {};
   (DATA.themes||[]).forEach(t=>{
     const key = themeGroupName(t.name);
+    if(key==="业绩") return;
     const g = map[key] = map[key] || {name:key, stocks:[], byCode:{}};
     (t.stocks||[]).forEach(s=>{
       const code = String(s.code||"");
@@ -751,16 +757,7 @@ function renderThemes(){
   const th = groupedThemes();
   if(!th.length){el("themes").innerHTML='<div class="empty">暂无板块数据</div>';return;}
   const nd = DATA.next_day || "T+1";
-  const overlay = th.filter(t=>t.name==="业绩");
-  const main = th.filter(t=>t.name!=="业绩");
-  const overlayCard = (t)=>{
-    const names = (t.stocks||[]).slice().sort((a,b)=>(b.lbc||0)-(a.lbc||0)).map(s=>`${s.name||"—"}${s.board_label? " "+s.board_label:""}`).join("、");
-    return `<div class="theme overlay-theme">
-      <div style="font-weight:600;margin-bottom:4px">暗线 / 叠加线：业绩 <span class="tcount" style="color:#a86b00">${t.zt_count}家涨停</span></div>
-      <div style="font-size:12px;color:#666">${names}</div>
-    </div>`;
-  };
-  el("themes").innerHTML = main.slice(0,12).map((t,idx)=>{
+  el("themes").innerHTML = th.slice(0,12).map((t,idx)=>{
     const confirmed = (t.zt_count||0)>=3;
     const ap = t.avg_premium;
     const apHtml = ap==null ? `<span class="muted" style="font-size:11px">次日溢价待${nd}竞价</span>`
@@ -770,11 +767,12 @@ function renderThemes(){
       const npHtml = np==null ? `<span class="muted" style="font-size:11px">待${nd}</span>`
         : `<b class="${np>=0?'up':'down'}">${np>=0?'+':''}${fmt(np*100,1)}%</b>`;
       const core = (s.core||[]).map(c=>`<span class="tcore">${c}</span>`).join('');
+      const yjHtml = hasYj(s)?'<span class="tag tag-yj" title="业绩题材叠加，加分项">业绩+</span>':'';
       const hasKmap = !!KMAP[String(s.code)];
       const clk = hasKmap ? ` onclick="openKline('${s.code}')" title="点击看日K线/分时"` : '';
       const lbcTxt = s.board_label || (s.lbc==0?'首板':s.lbc+'板');
       return `<tr${clk}>
-        <td><b>${s.name||"—"}</b>${core}${s.has_k && hasKmap?' <span class="tag tag-ws" style="background:#eef4fb;color:#185fa5" title="点击看K线">📈</span>':''}</td>
+        <td><b>${s.name||"—"}</b>${core}${yjHtml}${s.has_k && hasKmap?' <span class="tag tag-ws" style="background:#eef4fb;color:#185fa5" title="点击看K线">📈</span>':''}</td>
         <td class="${s.lbc>=5?'zt':''}">${lbcTxt}</td>
         <td>${fmt(s.fengdan)}</td>
         <td class="muted">${s.first? s.first.slice(0,5):'—'}</td>
@@ -791,10 +789,10 @@ function renderThemes(){
         <tbody>${stocks}</tbody>
       </table>
     </details>`;
-  }).join("") + (overlay.length ? overlayCard(overlay[0]) : "") + `<div class="legend" style="margin-top:4px">
+  }).join("") + `<div class="legend" style="margin-top:4px">
       <span><i class="dot" style="background:var(--red)"></i>红=高开延续(留/加)</span>
       <span><i class="dot" style="background:var(--green)"></i>绿=低开一日游(走)</span>
-      <span>👑身位 ⚡最早封板 💰封单最大</span>
+      <span>👑身位 ⚡最早封板 💰封单最大 · 业绩+=题材叠加加分项</span>
     </div>`;
 }
 
