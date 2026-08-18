@@ -478,6 +478,8 @@ def main():
                 "prev_close": k.get("prev_close"),
                 "limit_price": k.get("limit_price"),
             }
+            if k.get("turnover_yi"):
+                r["amount"] = k["turnover_yi"]
     for n in nodes:
         k = klines.get(str(n["code"]))
         if k:
@@ -487,6 +489,8 @@ def main():
                 "prev_close": k.get("prev_close"),
                 "limit_price": k.get("limit_price"),
             }
+            if k.get("turnover_yi"):
+                n["amount"] = k["turnover_yi"]
 
     # —— 重算连板：识别断板+反包，标注为「断板当日板数+1」——
     tk = date.replace("-", "")

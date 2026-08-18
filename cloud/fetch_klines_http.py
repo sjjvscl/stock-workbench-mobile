@@ -222,6 +222,7 @@ def fetch_one(code, name, date):
         intraday = fetch_intraday(code, date)
     except Exception:
         intraday = []
+    turnover_yi = round((intraday[-1][5] or 0) / 1e8, 2) if intraday else None
     return code, {
         "name": name,
         "daily": daily,
@@ -229,6 +230,7 @@ def fetch_one(code, name, date):
         "prev_close": prev_close,
         "limit_price": limit_price,
         "limit_ratio": lr,
+        "turnover_yi": turnover_yi,
     }
 
 
