@@ -583,7 +583,11 @@ def main():
     DATA = {
         "date": date,
         "next_day": next_trading_day(date),   # T+1 日期，用于"待T+1竞价"占位
-        "mode": "盘后收盘复盘" if mode == "after-close" else "次日开盘竞价策略",
+        "mode": {
+            "after-close": "盘后收盘复盘",
+            "midday": "午间收盘复盘",
+            "bidding": "次日开盘竞价策略",
+        }.get(mode, "盘中复盘"),
         "cycle": cycle,
         "market": market,
         "tianti": sorted(lu, key=lambda r: -r["lbc"]),

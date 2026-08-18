@@ -46,15 +46,21 @@ def latest_closed_trading_day():
     return d.strftime("%Y%m%d")
 
 
+def today_weekday_date():
+    d = datetime.now().date()
+    if d.weekday() >= 5:
+        return None
+    return d.strftime("%Y%m%d")
+
+
 def latest_data_date():
     files = glob.glob(str(HERE / "data_*.json"))
     dates = sorted(Path(f).name[5:-5] for f in files)
     return dates[-1] if dates else None
 
 
-def evening():
-    date8 = latest_closed_trading_day()
-    print("EVENING target", date8, flush=True)
+def refresh_day(date8, mode):
+    print(f"{mode.upper()} target", date8, flush=True)
     run("fetch_ths_history.py", date8)
     inp = HERE / f"input_{date8}.json"
     if not inp.exists():
@@ -63,11 +69,26 @@ def evening():
     if not data.get("limit_up"):
         print("limit_up empty, skip", flush=True)
         return False
+    if mode == "midday":
+        data["mode"] = "midday"
+        inp.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
     run("fetch_klines_http.py", date8)
     run("fetch_next_open_http.py")
     run("stock_workbench.py", f"input_{date8}.json")
     run("build_mobile.py", "--full", date8)
     return True
+
+
+def evening():
+    return refresh_day(latest_closed_trading_day(), "after-close")
+
+
+def midday():
+    date8 = today_weekday_date()
+    if not date8:
+        print("weekend, skip midday", flush=True)
+        return False
+    return refresh_day(date8, "midday")
 
 
 def morning():
@@ -84,12 +105,23 @@ def morning():
 def main():
     mode = None
     for a in sys.argv[1:]:
-        if a in ("morning", "evening"):
+        if a in ("morning", "midday", "evening"):
             mode = a
     if not mode:
-        mode = "morning" if datetime.utcnow().hour < 6 else "evening"
+        cn = datetime.utcnow() + timedelta(hours=8)
+        if cn.hour < 10:
+            mode = "morning"
+        elif cn.hour < 15:
+            mode = "midday"
+        else:
+            mode = "evening"
     print("MODE", mode, flush=True)
-    ok = morning() if mode == "morning" else evening()
+    if mode == "morning":
+        ok = morning()
+    elif mode == "midday":
+        ok = midday()
+    else:
+        ok = evening()
     return 0 if ok else 3
 
 
