@@ -124,6 +124,7 @@
   details.theme>summary::before{content:"▸";color:var(--muted);margin-right:6px;transition:transform .15s}
   details.theme[open]>summary::before{content:"▾"}
   details.theme>summary .tcount{color:var(--red);font-weight:700;font-size:12px}
+  details.theme.overlay-theme{border-style:dashed;border-color:#e2b96a;background:#fffdf7}
   .tstk{margin-top:8px;font-size:12px}
   .tstk th,.tstk td{padding:4px 6px;border-bottom:1px solid var(--border)}
   .tstk th{position:static;background:transparent;font-size:10.5px}
@@ -750,7 +751,16 @@ function renderThemes(){
   const th = groupedThemes();
   if(!th.length){el("themes").innerHTML='<div class="empty">暂无板块数据</div>';return;}
   const nd = DATA.next_day || "T+1";
-  el("themes").innerHTML = th.slice(0,12).map((t,idx)=>{
+  const overlay = th.filter(t=>t.name==="业绩");
+  const main = th.filter(t=>t.name!=="业绩");
+  const overlayCard = (t)=>{
+    const names = (t.stocks||[]).slice().sort((a,b)=>(b.lbc||0)-(a.lbc||0)).map(s=>`${s.name||"—"}${s.board_label? " "+s.board_label:""}`).join("、");
+    return `<div class="theme overlay-theme">
+      <div style="font-weight:600;margin-bottom:4px">暗线 / 叠加线：业绩 <span class="tcount" style="color:#a86b00">${t.zt_count}家涨停</span></div>
+      <div style="font-size:12px;color:#666">${names}</div>
+    </div>`;
+  };
+  el("themes").innerHTML = main.slice(0,12).map((t,idx)=>{
     const confirmed = (t.zt_count||0)>=3;
     const ap = t.avg_premium;
     const apHtml = ap==null ? `<span class="muted" style="font-size:11px">次日溢价待${nd}竞价</span>`
@@ -781,7 +791,7 @@ function renderThemes(){
         <tbody>${stocks}</tbody>
       </table>
     </details>`;
-  }).join("") + `<div class="legend" style="margin-top:4px">
+  }).join("") + (overlay.length ? overlayCard(overlay[0]) : "") + `<div class="legend" style="margin-top:4px">
       <span><i class="dot" style="background:var(--red)"></i>红=高开延续(留/加)</span>
       <span><i class="dot" style="background:var(--green)"></i>绿=低开一日游(走)</span>
       <span>👑身位 ⚡最早封板 💰封单最大</span>
