@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+wb_data.js
+wb_history.js
+workbench_latest.html
+workbench_*.html
+history_minutes.json

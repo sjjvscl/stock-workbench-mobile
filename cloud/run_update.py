@@ -10,6 +10,11 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 PY = sys.executable
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 
 
 def run(script, *args):

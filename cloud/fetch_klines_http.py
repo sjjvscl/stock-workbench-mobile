@@ -38,6 +38,26 @@ def limit_ratio(code):
     return 0.10
 
 
+def in_session(t):
+    try:
+        hh, mm = int(t[:2]), int(t[3:5])
+    except Exception:
+        return False
+    if hh == 9 and mm >= 30:
+        return True
+    if hh == 10:
+        return True
+    if hh == 11 and mm <= 30:
+        return True
+    if hh == 13:
+        return True
+    if hh == 14:
+        return True
+    if hh == 15 and mm <= 0:
+        return True
+    return False
+
+
 def http_json(url, referer="https://quote.eastmoney.com/"):
     req = urllib.request.Request(
         url,
@@ -54,11 +74,11 @@ def fetch_daily_tencent(code, lmt=DAILY_BARS):
     prefix = "sh" if str(code).startswith(("6", "9", "5")) else "sz"
     url = (
         "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
-        f"?param={prefix}{code},day,,,{lmt},qfq"
+        f"?param={prefix}{code},day,,,{lmt},bfq"
     )
     data = http_json(url, "https://gu.qq.com/")
     node = (data.get("data") or {}).get(f"{prefix}{code}") or {}
-    kl = node.get("qfqday") or node.get("day") or []
+    kl = node.get("day") or node.get("bfqday") or []
     out = []
     for p in kl:
         if len(p) < 6:
@@ -140,7 +160,7 @@ def fetch_intraday_tencent(code, date):
         p = float(parts[1])
         vol = int(float(parts[2]))
         amt = float(parts[3])
-        if vol <= 1:
+        if vol <= 1 or not in_session(t):
             continue
         out.append([t, round(p, 2), round(p, 2), round(p, 2), round(p, 2), round(amt, 2), vol])
     return out
@@ -166,7 +186,7 @@ def fetch_intraday_eastmoney(code, date):
         l = float(p[4])
         vol = int(float(p[5]))
         amt = float(p[6])
-        if vol <= 1:
+        if vol <= 1 or not in_session(t):
             continue
         out.append([t, round(o, 2), round(h, 2), round(l, 2), round(c, 2), round(amt, 2), round(vol, 2)])
     return out
