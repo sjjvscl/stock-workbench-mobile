@@ -76,6 +76,7 @@ def refresh_day(date8, mode):
     run("fetch_next_open_http.py")
     run("stock_workbench.py", f"input_{date8}.json")
     run("build_mobile.py", "--full", date8)
+    run("backfill_hist_minutes.py")
     return True
 
 
