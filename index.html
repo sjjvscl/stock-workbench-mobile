@@ -126,6 +126,7 @@
   details.theme>summary .tcount{color:var(--red);font-weight:700;font-size:12px}
   details.theme.overlay-theme{border-style:dashed;border-color:#e2b96a;background:#fffdf7}
   .tag-yj{background:#fff4e0;color:#a86b00}
+  .tag-sub{background:#eef4fb;color:#185fa5;font-size:10px;margin:1px 2px 0 0}
   .tstk{margin-top:8px;font-size:12px}
   .tstk th,.tstk td{padding:4px 6px;border-bottom:1px solid var(--border)}
   .tstk th{position:static;background:transparent;font-size:10.5px}
@@ -712,6 +713,8 @@ function hasYj(r){ return isYjText(r&&r.reason) || isYjText(r&&r.theme); }
 function themeGroupName(name){
   const s = String(name||"");
   if(/预增|预盈|增长|扭亏|减亏|年报|中报|半年报|一季报|一季度|季报|业绩/.test(s)) return "业绩";
+  if(/粮食|种业|转基因|农业|种植|化肥|农药|养殖|猪|鸡|牧业|渔业|农产品/.test(s)) return "农业";
+  if(/药|医药|医疗|制药|疫苗|血制品|CXO|医美/.test(s)) return "医药";
   if(/回购/.test(s)) return "回购";
   if(/定增/.test(s)) return "定增";
   if(/机器人/.test(s)) return "机器人";
@@ -726,12 +729,13 @@ function groupedThemes(){
   (DATA.themes||[]).forEach(t=>{
     const key = themeGroupName(t.name);
     if(key==="业绩") return;
-    const g = map[key] = map[key] || {name:key, stocks:[], byCode:{}};
+    const g = map[key] = map[key] || {name:key, stocks:[], byCode:{}, subs:{}};
     (t.stocks||[]).forEach(s=>{
       const code = String(s.code||"");
       if(!code || g.byCode[code]) return;
       g.byCode[code] = s;
       g.stocks.push(s);
+      g.subs[t.name] = (g.subs[t.name]||0) + 1;
     });
   });
   return Object.keys(map).map(k=>{
@@ -742,6 +746,7 @@ function groupedThemes(){
       zt_count:g.stocks.length,
       avg_premium: prems.length ? prems.reduce((a,b)=>a+b,0)/prems.length : null,
       stocks:g.stocks,
+      subs:g.subs,
     };
   }).sort((a,b)=>(b.zt_count||0)-(a.zt_count||0));
 }
@@ -760,6 +765,7 @@ function renderThemes(){
   el("themes").innerHTML = th.slice(0,12).map((t,idx)=>{
     const confirmed = (t.zt_count||0)>=3;
     const ap = t.avg_premium;
+    const subHtml = t.subs ? Object.keys(t.subs).sort((a,b)=>(t.subs[b]||0)-(t.subs[a]||0)).slice(0,6).map(k=>`<span class="tag tag-sub">${k} ${t.subs[k]}家</span>`).join('') : '';
     const apHtml = ap==null ? `<span class="muted" style="font-size:11px">次日溢价待${nd}竞价</span>`
       : `<span class="${ap>=0?'up':'down'}" style="font-weight:700;font-size:11px">均溢价 ${ap>=0?'+':''}${fmt(ap*100,1)}%</span>`;
     const stocks = (t.stocks||[]).slice().sort((a,b)=>(b.lbc||0)-(a.lbc||0)).map(s=>{
@@ -783,6 +789,7 @@ function renderThemes(){
       <summary>
         <span>${t.name} ${confirmed?'<span class="tag tag-ws">确认主线</span>':''} <span class="tcount">${t.zt_count}家涨停</span></span>
         <span>${apHtml}</span>
+        ${subHtml?`<div style="width:100%;margin-top:2px">${subHtml}</div>`:''}
       </summary>
       <table class="tstk">
         <thead><tr><th>个股</th><th>连板</th><th>封单(亿)</th><th>首封</th><th>次日溢价</th></tr></thead>
