@@ -763,10 +763,12 @@ function renderThemes(){
   if(!th.length){el("themes").innerHTML='<div class="empty">暂无板块数据</div>';return;}
   const nd = DATA.next_day || "T+1";
   el("themes").innerHTML = th.slice(0,12).map((t,idx)=>{
-    const confirmed = (t.zt_count||0)>=3;
-    const ap = t.avg_premium;
-    const subHtml = t.subs ? Object.keys(t.subs).sort((a,b)=>(t.subs[b]||0)-(t.subs[a]||0)).slice(0,6).map(k=>`<span class="tag tag-sub">${k} ${t.subs[k]}家</span>`).join('') : '';
-    const apHtml = ap==null ? `<span class="muted" style="font-size:11px">次日溢价待${nd}竞价</span>`
+  const confirmed = (t.zt_count||0)>=3;
+  const ap = t.avg_premium;
+  const subHtml = t.subs ? Object.keys(t.subs).sort((a,b)=>(t.subs[b]||0)-(t.subs[a]||0)).slice(0,6).map(k=>`<span class="tag tag-sub">${k} ${t.subs[k]}家</span>`).join('') : '';
+  const maxLbc = (t.stocks||[]).reduce((m,s)=>Math.max(m,s.lbc||0),0);
+  const leader = (t.stocks||[]).slice().sort((a,b)=>(b.lbc||0)-(a.lbc||0))[0];
+  const apHtml = ap==null ? `<span class="muted" style="font-size:11px">次日溢价待${nd}竞价</span>`
       : `<span class="${ap>=0?'up':'down'}" style="font-weight:700;font-size:11px">均溢价 ${ap>=0?'+':''}${fmt(ap*100,1)}%</span>`;
     const stocks = (t.stocks||[]).slice().sort((a,b)=>(b.lbc||0)-(a.lbc||0)).map(s=>{
       const np = s.next_premium;
@@ -787,8 +789,8 @@ function renderThemes(){
     }).join("");
     return `<details class="theme"${idx<3?' open':''}>
       <summary>
-        <span>${t.name} ${confirmed?'<span class="tag tag-ws">确认主线</span>':''} <span class="tcount">${t.zt_count}家涨停</span></span>
-        <span>${apHtml}</span>
+        <span>${t.name} ${confirmed?'<span class="tag tag-ws">确认主线</span>':''} <span class="tcount">涨停${t.zt_count}</span> <span class="tcount" style="color:#185fa5">最高${maxLbc}板</span></span>
+        <span>${apHtml}${leader?`<span class="muted" style="font-size:11px;margin-left:6px">龙头 ${leader.name}</span>`:''}</span>
         ${subHtml?`<div style="width:100%;margin-top:2px">${subHtml}</div>`:''}
       </summary>
       <table class="tstk">
