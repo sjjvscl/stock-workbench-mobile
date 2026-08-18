@@ -127,6 +127,7 @@
   details.theme.overlay-theme{border-style:dashed;border-color:#e2b96a;background:#fffdf7}
   .tag-yj{background:#fff4e0;color:#a86b00}
   .tag-sub{background:#eef4fb;color:#185fa5;font-size:10px;margin:1px 2px 0 0}
+  .tag-sub.active{background:#185fa5;color:#fff}
   .tstk{margin-top:8px;font-size:12px}
   .tstk th,.tstk td{padding:4px 6px;border-bottom:1px solid var(--border)}
   .tstk th{position:static;background:transparent;font-size:10.5px}
@@ -515,6 +516,8 @@ let tiantiMode = "theme";   // 连板天梯排列：theme=按题材分组, board
 let ttFilter = "all";
 let ttQuery = "";
 let premiumSortDir = 0;
+let themeSubFilter = {};
+let themeOpen = {};
 
 function togglePremiumSort(){
   if(tiantiMode !== "board"){
@@ -732,10 +735,16 @@ function groupedThemes(){
     const g = map[key] = map[key] || {name:key, stocks:[], byCode:{}, subs:{}};
     (t.stocks||[]).forEach(s=>{
       const code = String(s.code||"");
-      if(!code || g.byCode[code]) return;
+      if(!code) return;
+      g.subs[t.name] = (g.subs[t.name]||0) + 1;
+      const existing = g.byCode[code];
+      if(existing){
+        if(!existing.__subs.includes(t.name)) existing.__subs.push(t.name);
+        return;
+      }
+      s.__subs = [t.name];
       g.byCode[code] = s;
       g.stocks.push(s);
-      g.subs[t.name] = (g.subs[t.name]||0) + 1;
     });
   });
   return Object.keys(map).map(k=>{
@@ -751,6 +760,13 @@ function groupedThemes(){
   }).sort((a,b)=>(b.zt_count||0)-(a.zt_count||0));
 }
 
+function toggleThemeSub(g, s){
+  if(themeSubFilter[g] === s) themeSubFilter[g] = "";
+  else themeSubFilter[g] = s;
+  themeOpen[g] = true;
+  renderThemes();
+}
+
 function renderThemes(){
   (DATA.tianti||[]).forEach(r=>{
     const k = r.kline;
@@ -763,14 +779,19 @@ function renderThemes(){
   if(!th.length){el("themes").innerHTML='<div class="empty">暂无板块数据</div>';return;}
   const nd = DATA.next_day || "T+1";
   el("themes").innerHTML = th.slice(0,12).map((t,idx)=>{
-  const confirmed = (t.zt_count||0)>=3;
-  const ap = t.avg_premium;
-  const subHtml = t.subs ? Object.keys(t.subs).sort((a,b)=>(t.subs[b]||0)-(t.subs[a]||0)).slice(0,6).map(k=>`<span class="tag tag-sub">${k} ${t.subs[k]}家</span>`).join('') : '';
-  const maxLbc = (t.stocks||[]).reduce((m,s)=>Math.max(m,s.lbc||0),0);
-  const leader = (t.stocks||[]).slice().sort((a,b)=>(b.lbc||0)-(a.lbc||0))[0];
-  const apHtml = ap==null ? `<span class="muted" style="font-size:11px">次日溢价待${nd}竞价</span>`
+    const confirmed = (t.zt_count||0)>=3;
+    const ap = t.avg_premium;
+    const sel = themeSubFilter[t.name] || "";
+    const stocks = (t.stocks||[]).filter(s=>!sel || (s.__subs||[]).includes(sel));
+    const subKeys = t.subs ? Object.keys(t.subs).sort((a,b)=>(t.subs[b]||0)-(t.subs[a]||0)).slice(0,6) : [];
+    const subHtml = (sel?'<span class="tag tag-sub active" onclick="event.stopPropagation();event.preventDefault();toggleThemeSub(\''+t.name+'\',\'\')">全部</span>':'') + subKeys.map(k=>`<span class="tag tag-sub${sel===k?' active':''}" onclick="event.stopPropagation();event.preventDefault();toggleThemeSub('${t.name}','${k}')">${k} ${t.subs[k]}家</span>`).join('');
+    const maxLbc = stocks.reduce((m,s)=>Math.max(m,s.lbc||0),0);
+    const leader = stocks.slice().sort((a,b)=>(b.lbc||0)-(a.lbc||0))[0];
+    const countTxt = sel ? `${stocks.length}/${t.zt_count}` : `${t.zt_count}`;
+    const isOpen = themeOpen[t.name] !== undefined ? themeOpen[t.name] : idx<3;
+    const apHtml = ap==null ? `<span class="muted" style="font-size:11px">次日溢价待${nd}竞价</span>`
       : `<span class="${ap>=0?'up':'down'}" style="font-weight:700;font-size:11px">均溢价 ${ap>=0?'+':''}${fmt(ap*100,1)}%</span>`;
-    const stocks = (t.stocks||[]).slice().sort((a,b)=>(b.lbc||0)-(a.lbc||0)).map(s=>{
+    const stockRows = stocks.slice().sort((a,b)=>(b.lbc||0)-(a.lbc||0)).map(s=>{
       const np = s.next_premium;
       const npHtml = np==null ? `<span class="muted" style="font-size:11px">待${nd}</span>`
         : `<b class="${np>=0?'up':'down'}">${np>=0?'+':''}${fmt(np*100,1)}%</b>`;
@@ -787,15 +808,15 @@ function renderThemes(){
         <td>${npHtml}</td>
       </tr>`;
     }).join("");
-    return `<details class="theme"${idx<3?' open':''}>
+    return `<details class="theme" data-g="${t.name}"${isOpen?' open':''}>
       <summary>
-        <span>${t.name} ${confirmed?'<span class="tag tag-ws">确认主线</span>':''} <span class="tcount">涨停${t.zt_count}</span> <span class="tcount" style="color:#185fa5">最高${maxLbc}板</span></span>
+        <span>${t.name} ${confirmed?'<span class="tag tag-ws">确认主线</span>':''} <span class="tcount">涨停${countTxt}</span> <span class="tcount" style="color:#185fa5">最高${maxLbc}板</span></span>
         <span>${apHtml}${leader?`<span class="muted" style="font-size:11px;margin-left:6px">龙头 ${leader.name}</span>`:''}</span>
         ${subHtml?`<div style="width:100%;margin-top:2px">${subHtml}</div>`:''}
       </summary>
       <table class="tstk">
         <thead><tr><th>个股</th><th>连板</th><th>封单(亿)</th><th>首封</th><th>次日溢价</th></tr></thead>
-        <tbody>${stocks}</tbody>
+        <tbody>${stockRows}</tbody>
       </table>
     </details>`;
   }).join("") + `<div class="legend" style="margin-top:4px">
@@ -803,6 +824,10 @@ function renderThemes(){
       <span><i class="dot" style="background:var(--green)"></i>绿=低开一日游(走)</span>
       <span>👑身位 ⚡最早封板 💰封单最大 · 业绩+=题材叠加加分项</span>
     </div>`;
+  el("themes").querySelectorAll("details.theme").forEach(d=>{
+    const nm = d.getAttribute("data-g");
+    d.querySelector("summary").addEventListener("click", ()=>{ themeOpen[nm] = d.open; });
+  });
 }
 
 function renderNodes(){
