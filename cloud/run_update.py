@@ -37,7 +37,7 @@ def run(script, *args):
 
 
 def latest_closed_trading_day():
-    now = datetime.now()
+    now = datetime.utcnow() + timedelta(hours=8)
     d = now.date()
     if d.weekday() >= 5 or (now.hour, now.minute) < (15, 30):
         d -= timedelta(days=1)
@@ -47,7 +47,7 @@ def latest_closed_trading_day():
 
 
 def today_weekday_date():
-    d = datetime.now().date()
+    d = (datetime.utcnow() + timedelta(hours=8)).date()
     if d.weekday() >= 5:
         return None
     return d.strftime("%Y%m%d")
