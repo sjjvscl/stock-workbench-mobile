@@ -28,6 +28,26 @@ def replace_wb_data(index_path):
         wb_text,
         flags=re.S,
     )
+    m = re.search(r"window\.WB_DATA=(.*?);\nwindow\.WB_DATES=", wb_text, re.S)
+    if m:
+        data = json.loads(m.group(1))
+
+        def strip_intraday(o):
+            if isinstance(o, dict):
+                if isinstance(o.get("kline"), dict):
+                    o["kline"].pop("intraday", None)
+                for v in o.values():
+                    strip_intraday(v)
+            elif isinstance(o, list):
+                for v in o:
+                    strip_intraday(v)
+
+        strip_intraday(data)
+        wb_text = (
+            wb_text[:m.start(1)]
+            + json.dumps(data, ensure_ascii=False)
+            + wb_text[m.end(1):]
+        )
     new = DATA_RE.sub("<script>" + wb_text + "</script>", text)
     if new == text:
         print("skip: WB_DATA block unchanged")
