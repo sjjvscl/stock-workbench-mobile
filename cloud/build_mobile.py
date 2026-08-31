@@ -3,6 +3,7 @@
 
 import json
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -20,13 +21,28 @@ def replace_wb_data(index_path):
         print("skip: cloud/wb_data.js missing")
         return False
     text = index_path.read_text(encoding="utf-8")
-    new = DATA_RE.sub("<script>" + wb.read_text(encoding="utf-8").strip() + "</script>", text)
+    wb_text = wb.read_text(encoding="utf-8").strip()
+    wb_text = re.sub(
+        r"window\.WB_DATES_INLINE=.*?;\nwindow\.WB_BUILD=",
+        "window.WB_DATES_INLINE={};\nwindow.WB_BUILD=",
+        wb_text,
+        flags=re.S,
+    )
+    new = DATA_RE.sub("<script>" + wb_text + "</script>", text)
     if new == text:
         print("skip: WB_DATA block unchanged")
         return False
     index_path.write_text(new, encoding="utf-8")
     print("index.html WB_DATA updated")
     return True
+
+
+def copy_date_files():
+    n = 0
+    for src in sorted(HERE.glob("data_*.json")):
+        shutil.copy2(src, ROOT / src.name)
+        n += 1
+    print(f"date files copied: {n}")
 
 
 def merge_hist(date8):
@@ -127,6 +143,7 @@ def main():
         if not date8:
             return 3
         changed = replace_wb_data(ROOT / "index.html")
+        copy_date_files()
         merge_hist(date8)
         apply_premium(date8)
         return 0 if changed else 0
