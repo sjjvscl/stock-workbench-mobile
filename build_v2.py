@@ -15,6 +15,7 @@ ROOT = HERE.parent
 TPL = HERE / "v2_template.html"
 SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "workbench_mobile_v2.html"
 OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "workbench_v2.html"
+OUT_LITE = OUT.with_name("workbench_v2_lite.html")
 
 
 def extract_var(text: str, name: str) -> str:
@@ -70,6 +71,46 @@ def main():
     OUT.write_text(out, encoding="utf-8")
     print(f"OK -> {OUT}  ({OUT.stat().st_size/1024/1024:.1f} MB)")
     print(f"WB_BUILD: {wb_build}")
+
+    # ---- 轻量版：剔除历史日期内嵌的分钟分时（占体积 ~76%），日K与最新日分时全部保留 ----
+    build_lite(tpl_text, wb_data, wb_dates, wb_dates_inline, wb_build)
+
+
+def strip_intraday(obj):
+    """递归剔除 kline.intraday（分钟分时），保留 daily/prev_close/limit_price。"""
+    if isinstance(obj, dict):
+        k = obj.get("kline")
+        if isinstance(k, dict):
+            k.pop("intraday", None)
+        for v in obj.values():
+            strip_intraday(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            strip_intraday(v)
+
+
+def build_lite(tpl_text, wb_data, wb_dates, wb_dates_inline, wb_build):
+    """生成 workbench_v2_lite.html：历史日期的分时改为按需加载（hist/ 懒加载 + 联网兜底）。"""
+    try:
+        inline = json.loads(wb_dates_inline)
+    except Exception as e:
+        print(f"lite skip (inline json invalid): {e}", file=sys.stderr)
+        return
+    for _k, day in inline.items():
+        if isinstance(day, dict):
+            strip_intraday(day)
+    lite_data = wb_data  # 最新日保留完整分时（复盘当天要看分时）
+    lite_inline = json.dumps(inline, ensure_ascii=False, separators=(",", ":"))
+    out = tpl_text.replace("__WB_DATA_JSON__", lite_data)
+    out = out.replace("__WB_DATES_JSON__", wb_dates)
+    out = out.replace("__WB_DATES_INLINE_JSON__", lite_inline)
+    out = out.replace('__WB_BUILD_STR__', wb_build.replace('"', '\\"'))
+    out = out.replace(
+        "<title>情绪周期交易工作台 V2 · 弱转强节点票 · 机械触发</title>",
+        "<title>情绪周期交易工作台 V2 · 轻量版（秒开）</title>",
+    )
+    OUT_LITE.write_text(out, encoding="utf-8")
+    print(f"OK -> {OUT_LITE}  ({OUT_LITE.stat().st_size/1024/1024:.1f} MB, 轻量版)")
 
 
 if __name__ == "__main__":
