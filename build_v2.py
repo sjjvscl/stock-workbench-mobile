@@ -1,14 +1,20 @@
 # -*- coding: utf-8 -*-
-"""build_v2.py: 从 index.html 提取数据变量，注入 v2_template.html，生成 workbench_v2.html。"""
+"""build_v2.py: 从数据文件提取 WB_* 变量，注入 v2_template.html，生成 workbench_v2.html。
+
+默认数据源为 D:/炒股/workbench_mobile_v2.html（build_fast.py 每天收盘后更新的 V1 主文件），
+输出到 D:/炒股/workbench_v2.html（deploy_github.py 的部署源）。
+可用命令行覆盖：build_v2.py [源HTML] [输出HTML]
+"""
 import json
 import re
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-SRC = HERE / "index.html"
+ROOT = HERE.parent
 TPL = HERE / "v2_template.html"
-OUT = HERE / "workbench_v2.html"
+SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "workbench_mobile_v2.html"
+OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "workbench_v2.html"
 
 
 def extract_var(text: str, name: str) -> str:
