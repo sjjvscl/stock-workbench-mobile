@@ -120,13 +120,15 @@ def main():
         else:
             mode = "evening"
     print("MODE", mode, flush=True)
+    # 无数据可处理（未开盘/周末/数据源为空）一律视为正常跳过，exit 0；
+    # 只有脚本真正失败（run() 抛 RuntimeError）才非 0，由顶层异常传播为 exit 1。
     if mode == "morning":
-        ok = morning()
+        morning()
     elif mode == "midday":
-        ok = midday()
+        midday()
     else:
-        ok = evening()
-    return 0 if ok else 3
+        evening()
+    return 0
 
 
 if __name__ == "__main__":
