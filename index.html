@@ -893,11 +893,24 @@ function renderThemes(){
     const isOpen = themeOpen[t.name] !== undefined ? themeOpen[t.name] : idx<3;
     const apHtml = ap==null ? `<span class="muted" style="font-size:11px">次日溢价待${nd}竞价</span>`
       : `<span class="${ap>=0?'up':'down'}" style="font-weight:700;font-size:11px">均溢价 ${ap>=0?'+':''}${fmt(ap*100,1)}%</span>`;
+    // 整组自算唯一"⚡最早"（覆盖数据里可能多写的标记）
+    let earliestCode = null;
+    if(stocks.length){
+      const e = stocks.reduce((acc,cur)=>{
+        const cf = (cur.first||"").trim() || "99:99:99";
+        const af = (acc.first||"").trim() || "99:99:99";
+        return cf < af ? cur : acc;
+      }, stocks[0]);
+      earliestCode = e ? String(e.code) : null;
+    }
     const stockRows = stocks.slice().sort((a,b)=>(b.lbc||0)-(a.lbc||0)).map(s=>{
       const np = s.next_premium;
       const npHtml = np==null ? `<span class="muted" style="font-size:11px">待${nd}</span>`
         : `<b class="${np>=0?'up':'down'}">${np>=0?'+':''}${fmt(np*100,1)}%</b>`;
-      const core = (s.core||[]).map(c=>`<span class="tcore">${c}</span>`).join('');
+      // 过滤掉数据里可能多写的"⚡最早"，按整组 first 唯一赋值
+      const tags = (s.core||[]).filter(c => !/⚡最早/.test(c));
+      if(earliestCode && String(s.code)===earliestCode) tags.push("⚡最早");
+      const core = tags.map(c=>`<span class="tcore">${c}</span>`).join('');
       const yjHtml = hasYj(s)?'<span class="tag tag-yj" title="业绩题材叠加，加分项">业绩+</span>':'';
       const hasKmap = !!KMAP[String(s.code)];
       const clk = hasKmap ? ` onclick="openKline('${s.code}')" title="点击看日K线/分时"` : '';
