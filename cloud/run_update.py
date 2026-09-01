@@ -99,6 +99,9 @@ def morning():
         return False
     print("MORNING target", date8, flush=True)
     run("fetch_next_open_http.py", "--force", date8)
+    if not (HERE / f"next_open_{date8}.json").exists():
+        print(f"next_open_{date8}.json not ready, skip build_mobile", flush=True)
+        return False
     run("build_mobile.py", "--premium", date8)
     return True
 
