@@ -125,6 +125,30 @@
     table.tianti-table .stockname{font-size:13px}
     .rchip{font-size:10.5px;padding:0 5px}
     .tianti-table td.lbc{font-size:13px}
+    /* 手机端：连板天梯转卡片化布局 */
+    table.tianti-table thead{display:none}
+    table.tianti-table, table.tianti-table tbody{display:block;width:100%}
+    table.tianti-table tr{
+      display:block;width:100%;
+      margin:0 0 10px;border:1px solid var(--border);border-radius:10px;
+      background:#fff;box-shadow:0 1px 3px rgba(20,30,50,.05);
+      padding:10px 12px;
+    }
+    table.tianti-table td{
+      display:flex;gap:8px;align-items:flex-start;
+      padding:4px 0;border:none;font-size:12.5px;
+    }
+    table.tianti-table td::before{
+      content:attr(data-label);flex:0 0 56px;color:var(--muted);
+      font-size:11px;font-weight:600;padding-top:2px;
+    }
+    table.tianti-table td.c-name{
+      display:block;padding:0 0 8px;border-bottom:1px dashed var(--border);margin-bottom:6px
+    }
+    table.tianti-table td.c-name::before{display:none}
+    table.tianti-table td.c-name .stockname{font-size:15px}
+    table.tianti-table td.c-name .name-line{font-size:15px;line-height:1.5}
+    table.tianti-table td.c-reason .reason-chips{font-size:11px}
   }
   .tt-mode{display:inline-flex;gap:4px;margin-left:10px;vertical-align:middle}
   .tt-mode button,.chip-row button{border:1px solid var(--border);background:#fafbfd;border-radius:7px;padding:2px 10px;font-size:12px;cursor:pointer;color:var(--text)}
@@ -732,15 +756,15 @@ function tiantiRowHtml(r){
     : (r.signal ? `<span class="tag tag-sig">${r.signal}</span>` : '');
   const yjHtml = hasYj(r)?'<span class="tag tag-yj" title="业绩题材叠加，加分项">业绩+</span>':'';
   return `<tr${clk} data-code="${r.code}" data-ws="${r.weak_strong?1:0}" data-open="${r.open_times||0}" data-hard="${/硬板|一字|秒板/.test(r.signal||"")?1:0}">
-    <td class="lbc ${r.lbc>=5?'zt':''}" style="cursor:help" title="同花顺原值: ${r.lbc_raw||r.lbc}板 (${r.desc||''}) · 连续板数: ${r.lbc}板${r.is_fanbao?' (反包)':''}">${r.board_label||(r.lbc==0?'首板':r.lbc+'板')}${r.is_fanbao?' <span class="fb">反包</span>':''}</td>
-    <td class="c-name">
+    <td class="lbc ${r.lbc>=5?'zt':''}" data-label="连板" style="cursor:help" title="同花顺原值: ${r.lbc_raw||r.lbc}板 (${r.desc||''}) · 连续板数: ${r.lbc}板${r.is_fanbao?' (反包)':''}">${r.board_label||(r.lbc==0?'首板':r.lbc+'板')}${r.is_fanbao?' <span class="fb">反包</span>':''}</td>
+    <td class="c-name" data-label="名称">
       <div class="name-line"><b class="stockname">${r.name||"—"}</b>${coreHtml}${yjHtml}${hasK?' <span class="kbtn" title="点击看日K线/分时">📈</span>':''}<span class="tag tag-theme">${r.theme||"—"}</span></div>
     </td>
-    <td class="c-reason"><div class="reason-chips">${reasonHtml}</div></td>
-    <td>${fmt(r.fengdan)}</td>
-    <td class="hidable">${fmt(r.amount)}</td>
-    <td>${npHtml}</td>
-    <td class="hidable">${sigHtml}</td>
+    <td class="c-reason" data-label="涨停原因"><div class="reason-chips">${reasonHtml}</div></td>
+    <td data-label="封单(亿)">${fmt(r.fengdan)}</td>
+    <td class="hidable" data-label="成交额(亿)">${fmt(r.amount)}</td>
+    <td data-label="次日溢价">${npHtml}</td>
+    <td class="hidable" data-label="信号">${sigHtml}</td>
   </tr>`;
 }
 function markTiantiCore(rows, mode){
