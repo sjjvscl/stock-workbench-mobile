@@ -57,6 +57,11 @@
   .tag-yj{background:#fff4e0;color:#a86b00}
   .tag-sub{background:var(--bluebg);color:var(--blue);font-size:10px;margin:1px 2px 0 0;cursor:pointer}
   .tag-sub.active{background:var(--blue);color:#fff}
+  .sortbtns{display:inline-flex;align-items:center;gap:3px;margin-left:8px;font-size:10px;color:var(--muted)}
+  .sortbtn-label{margin-right:2px}
+  .sortbtn{padding:2px 7px;border:1px solid var(--border);background:#fff;border-radius:5px;font-size:10.5px;color:var(--muted);cursor:pointer;line-height:1.2;transition:.15s}
+  .sortbtn:hover{border-color:var(--blue);color:var(--blue)}
+  .sortbtn.active{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:700}
   /* ===== 全局纪律条（常驻） ===== */
   .rule-bar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(22,26,32,.96);color:#fff;border-radius:10px;padding:8px 12px;margin-bottom:12px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
   .rule-bar .rb-title{font-weight:800;font-size:12px;white-space:nowrap;color:#ffd479}
@@ -653,6 +658,7 @@ let ttQuery = "";
 let premiumSortDir = 0;
 let themeSubFilter = {};
 let themeOpen = {};
+let themeSort = {};   // 各题材排序方式：'lbc' 身位倒序（默认） | 'first' 首封时间升序 | 'premium' 次日溢价降序
 
 function togglePremiumSort(){
   if(tiantiMode !== "board"){ tiantiMode = "board"; document.querySelectorAll("#ttMode button").forEach(b=>b.classList.toggle("active", b.dataset.m==="board")); }
@@ -869,6 +875,12 @@ function toggleThemeSub(g, s){
   themeOpen[g] = true;
   renderThemes();
 }
+function toggleThemeSort(g, m){
+  // 再点一次当前模式 = 回到默认（身位倒序）
+  themeSort[g] = (themeSort[g] === m) ? 'lbc' : m;
+  themeOpen[g] = true;
+  renderThemes();
+}
 function renderThemes(){
   (DATA.tianti||[]).forEach(r=>{
     const k = r.kline;
@@ -903,7 +915,24 @@ function renderThemes(){
       }, stocks[0]);
       earliestCode = e ? String(e.code) : null;
     }
-    const stockRows = stocks.slice().sort((a,b)=>(b.lbc||0)-(a.lbc||0)).map(s=>{
+    const stockRows = stocks.slice().sort((a,b)=>{
+      const mode = themeSort[t.name] || 'lbc';
+      if(mode === 'first'){
+        const af = String(a.first||'99:99:99').slice(0,8);
+        const bf = String(b.first||'99:99:99').slice(0,8);
+        if(af !== bf) return af < bf ? -1 : 1;
+        return (b.fengdan||0)-(a.fengdan||0);
+      }
+      if(mode === 'premium'){
+        const ap = (a.next_premium==null?-Infinity:a.next_premium);
+        const bp = (b.next_premium==null?-Infinity:b.next_premium);
+        if(bp !== ap) return bp - ap;
+        return (b.fengdan||0)-(a.fengdan||0);
+      }
+      // 默认 'lbc'：身位倒序，同板按封单降序
+      if((b.lbc||0) !== (a.lbc||0)) return (b.lbc||0)-(a.lbc||0);
+      return (b.fengdan||0)-(a.fengdan||0);
+    }).map(s=>{
       const np = s.next_premium;
       const npHtml = np==null ? `<span class="muted" style="font-size:11px">待${nd}</span>`
         : `<b class="${np>=0?'up':'down'}">${np>=0?'+':''}${fmt(np*100,1)}%</b>`;
@@ -926,7 +955,7 @@ function renderThemes(){
     return `<details class="theme" data-g="${t.name}"${isOpen?' open':''}>
       <summary>
         <span>${t.name} ${confirmed?'<span class="tag tag-ws">确认主线</span>':''} <span class="tcount">涨停${countTxt}</span> <span class="tcount" style="color:#16558f">最高${maxLbc}板</span></span>
-        <span>${apHtml}${leader?`<span class="muted" style="font-size:11px;margin-left:6px">龙头 ${leader.name}</span>`:''}</span>
+        <span>${apHtml}${leader?`<span class="muted" style="font-size:11px;margin-left:6px">龙头 ${leader.name}</span>`:''}<span class="sortbtns" onclick="event.stopPropagation();event.preventDefault()"><span class="sortbtn-label">按</span><button type="button" class="sortbtn${(themeSort[t.name]||'lbc')==='first'?' active':''}" onclick="event.stopPropagation();event.preventDefault();toggleThemeSort('${t.name}','first')">首封</button><button type="button" class="sortbtn${(themeSort[t.name]||'lbc')==='premium'?' active':''}" onclick="event.stopPropagation();event.preventDefault();toggleThemeSort('${t.name}','premium')">溢价</button></span></span>
         ${subHtml?`<div style="width:100%;margin-top:2px">${subHtml}</div>`:''}
       </summary>
       <table class="tstk">
