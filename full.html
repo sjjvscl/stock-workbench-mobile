@@ -851,7 +851,8 @@ function hasYj(r){ return isYjText(r&&r.reason) || isYjText(r&&r.theme); }
 function themeGroupName(name){
   const s = String(name||"");
   if(/预增|预盈|增长|扭亏|减亏|年报|中报|半年报|一季报|一季度|季报|业绩/.test(s)) return "业绩";
-  if(/粮食|种业|转基因|农业|种植|化肥|农药|养殖|猪|鸡|牧业|渔业|农产品/.test(s)) return "农业";
+  if(/传媒|娱乐|影视|剧|游戏|动漫|综艺|流媒体|视频|影游|互动/.test(s)) return "传媒娱乐";
+  if(/粮食|种业|转基因|农业|种植|化肥|农药|养殖|猪|鸡|牧业|渔业|农产品|饲料/.test(s)) return "农业";
   if(/药|医药|医疗|制药|疫苗|血制品|CXO|医美/.test(s)) return "医药";
   if(/回购/.test(s)) return "回购";
   if(/定增/.test(s)) return "定增";
