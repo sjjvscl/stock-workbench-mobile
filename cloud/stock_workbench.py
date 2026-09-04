@@ -435,8 +435,25 @@ def main():
     up_ratio = (red / green) if green else 1.0
     low5 = fnum(updown.get("CNT_LOW5", 0)); high5 = fnum(updown.get("CNT_HIGH5", 0))
 
-    # 跌停数：优先 input.limit_down_count（东财兜底已注入），再回退 updown.CNT_REACH_DNLIMIT
+    # 跌停数：优先 input.limit_down_count（东财兜底已注入），再回退 updown.CNT_REACH_DNLIMIT，最后东财实时跌停池兜底
     dt = int(inp.get("limit_down_count") or fnum(updown.get("CNT_REACH_DNLIMIT", 0)))
+    if not dt:
+        try:
+            import urllib.request, ssl as _ssl
+            _ctx = _ssl.create_default_context(); _ctx.check_hostname=False; _ctx.verify_mode=_ssl.CERT_NONE
+            _UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
+            _url = f"https://push2ex.eastmoney.com/getTopicDTPool?ut=7eea3edcaed734bea9cbfc24409ed989&dpt=wz.ztzt&Pageindex=0&pagesize=200&sort=fund%3Aasc&date={date.replace('-','')}"
+            _req = urllib.request.Request(_url, headers={"User-Agent":_UA, "Referer":"https://quote.eastmoney.com/"})
+            _raw = urllib.request.urlopen(_req, timeout=15, context=_ctx).read()
+            _d = json.loads(_raw.decode("utf-8", "ignore"))
+            _pool = (_d.get("data") or {}).get("pool") or []
+            if _pool:
+                dt = len(_pool)
+                inp["limit_down_count"] = dt
+                inp["limit_down_stocks"] = [{"code":p.get("c"), "name":p.get("n"), "pct":round((float(p.get("zdp") or 0))/100, 4)} for p in _pool[:20]]
+                print(f"[limit_down eastmoney fallback] {dt} stocks on {date}", file=sys.stderr)
+        except Exception as e:
+            print(f"[limit_down eastmoney fallback failed] {e}", file=sys.stderr)
 
     # 封板率 / 炸板率 / 晋级率 / 成交额
     # 炸板 = 涨停打开次数 ≥ 1（即开过板，无论回封与否）
