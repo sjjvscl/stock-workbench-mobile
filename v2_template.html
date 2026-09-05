@@ -639,13 +639,25 @@ function renderMarket(){
     if(!lds.length){
       ldb.innerHTML = `<div class="muted" style="padding:8px">今日无跌停 — 情绪健康</div>`;
     } else {
-      const rows = lds.map(s=>`<tr>
-        <td>${s.code||""}</td>
-        <td>${s.name||""}</td>
-        <td class="dt">${(s.zdp!=null?s.zdp.toFixed(2):"—")+"%"}</td>
-        <td>${s.amount?(s.amount/1e8).toFixed(2):"—"}</td>
-        <td>${s.fund?(s.fund/1e8).toFixed(2):"—"}</td>
-      </tr>`).join("");
+      // 先把所有有 K 数据的跌停股注册到 KMAP（供 openKline 弹窗复用）
+      lds.forEach(s=>{
+        const k = s.kline;
+        if(k && (k.daily&&k.daily.length)){
+          KMAP[String(s.code)] = {name:s.name, code:s.code, daily:k.daily||[], intraday:k.intraday||[], prev_close:k.prev_close, limit_price:k.limit_price, minutesByDate:{}, curMinDate:null};
+          if(k.intraday && k.intraday.length && DATA.date) KMAP[String(s.code)].minutesByDate[DATA.date] = k.intraday;
+        }
+      });
+      const rows = lds.map(s=>{
+        const hasK = !!(s.kline && s.kline.daily && s.kline.daily.length);
+        const clk = hasK ? ` onclick="openKline('${s.code}')" title="点击看K线/分时" style="cursor:pointer"` : '';
+        return `<tr${clk}>
+          <td>${s.code||""}</td>
+          <td>${s.name||""}${hasK?' <span class="tag tag-ws" style="background:#eef4fb;color:#16558f;font-size:10px">📈</span>':''}</td>
+          <td class="dt">${(s.zdp!=null?s.zdp.toFixed(2):"—")+"%"}</td>
+          <td>${s.amount?fmt(s.amount):"—"}</td>
+          <td>${s.fund?(s.fund/1e8).toFixed(2):"—"}</td>
+        </tr>`;
+      }).join("");
       ldb.innerHTML = `<table style="font-size:12px">
         <thead><tr><th>代码</th><th>名称</th><th>跌幅</th><th>成交额(亿)</th><th>封单(亿)</th></tr></thead>
         <tbody>${rows}</tbody></table>`;
