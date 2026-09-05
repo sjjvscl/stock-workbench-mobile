@@ -90,14 +90,23 @@ def strip_intraday(obj):
 
 
 def build_lite(tpl_text, wb_data, wb_dates, wb_dates_inline, wb_build):
-    """生成 workbench_v2_lite.html：历史日期的分时改为按需加载（hist/ 懒加载 + 联网兜底）。"""
+    """生成 workbench_v2_lite.html：历史日期的分时改为按需加载（hist/ 懒加载 + 联网兜底）。
+    关键：当前日（WB_DATA.date）的内嵌副本必须保留完整分时——
+    否则用户切到历史日再切回当前日时，applyDate 用的是内嵌副本，KMAP 重注册时分时=0。"""
     try:
         inline = json.loads(wb_dates_inline)
     except Exception as e:
         print(f"lite skip (inline json invalid): {e}", file=sys.stderr)
         return
+    # 取当前日（WB_DATA.date）= 需保留完整分时的"最新日"
+    try:
+        latest_date = json.loads(wb_data).get("date")
+    except Exception:
+        latest_date = None
     for _k, day in inline.items():
         if isinstance(day, dict):
+            if latest_date and day.get("date") == latest_date:
+                continue   # 当前日副本不剥：切回当天时跌停/涨停/节点票当日分时可用
             strip_intraday(day)
     lite_data = wb_data  # 最新日保留完整分时（复盘当天要看分时）
     lite_inline = json.dumps(inline, ensure_ascii=False, separators=(",", ":"))

@@ -1759,7 +1759,7 @@ function fillInlineMinutes(){
       const d = DATES_INLINE[fn];
       if(!d || !d.date) return;
       const day = d.date;
-      const list = (d.tianti||[]).concat(d.nodes||[]);
+      const list = (d.tianti||[]).concat(d.nodes||[]).concat(d.limit_down_stocks||[]);
       list.forEach(r=>{
         const k = KMAP[String(r.code)];
         const intra = r.kline && r.kline.intraday;
