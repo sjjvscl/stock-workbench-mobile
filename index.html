@@ -113,7 +113,7 @@
   .rchip.open{background:#fff1e8;border-color:#f0c8a8;color:#a75a18}
   .rchip.hard{background:#e8f1fb;border-color:#c6dcef;color:#16558f}
   .rchip.ws{background:#e6f5ec;border-color:#b7e3c5;color:#128a4b}
-  .tianti-table .kbtn{cursor:pointer;font-size:14px;line-height:1;padding:0 2px;background:#eef4fb;color:#16558f;border-radius:3px}
+  .kbtn{cursor:pointer;font-size:10px;font-weight:700;line-height:1;padding:2px 4px;background:#eef4fb;color:#16558f;border-radius:3px;vertical-align:middle}
   .tianti-table .lbc.zt{color:var(--red)}
   .tianti-table .fb{background:#fff5f5;color:#c0392b;font-size:10px;padding:0 5px;border-radius:3px;font-weight:700}
   .tianti-table th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
@@ -652,7 +652,7 @@ function renderMarket(){
         const clk = hasK ? ` onclick="openKline('${s.code}')" title="点击看K线/分时" style="cursor:pointer"` : '';
         return `<tr${clk}>
           <td>${s.code||""}</td>
-          <td>${s.name||""}${hasK?' <span class="tag tag-ws" style="background:#eef4fb;color:#16558f;font-size:10px">📈</span>':''}</td>
+          <td>${s.name||""}${hasK?' <span class="kbtn" title="点击看日K线/分时">K线</span>':''}</td>
           <td class="dt">${(s.zdp!=null?s.zdp.toFixed(2):"—")+"%"}</td>
           <td>${s.amount?fmt(s.amount):"—"}</td>
           <td>${s.fund?(s.fund/1e8).toFixed(2):"—"}</td>
@@ -770,7 +770,7 @@ function tiantiRowHtml(r){
   return `<tr${clk} data-code="${r.code}" data-ws="${r.weak_strong?1:0}" data-open="${r.open_times||0}" data-hard="${/硬板|一字|秒板/.test(r.signal||"")?1:0}">
     <td class="lbc ${r.lbc>=5?'zt':''}" data-label="连板" style="cursor:help" title="同花顺原值: ${r.lbc_raw||r.lbc}板 (${r.desc||''}) · 连续板数: ${r.lbc}板${r.is_fanbao?' (反包)':''}">${r.board_label||(r.lbc==0?'首板':r.lbc+'板')}${r.is_fanbao?' <span class="fb">反包</span>':''}</td>
     <td class="c-name" data-label="名称">
-      <div class="name-line"><b class="stockname">${r.name||"—"}</b>${coreHtml}${yjHtml}${hasK?' <span class="kbtn" title="点击看日K线/分时">📈</span>':''}<span class="tag tag-theme">${r.theme||"—"}</span></div>
+      <div class="name-line"><b class="stockname">${r.name||"—"}</b>${coreHtml}${yjHtml}${hasK?' <span class="kbtn" title="点击看日K线/分时">K线</span>':''}<span class="tag tag-theme">${r.theme||"—"}</span></div>
     </td>
     <td class="c-reason" data-label="涨停原因"><div class="reason-chips">${reasonHtml}</div></td>
     <td data-label="封单(亿)">${fmt(r.fengdan)}</td>
