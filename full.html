@@ -1168,11 +1168,11 @@ function renderRoles(){
       .concat(g.followers.map(s=>roleRowHtml(s,"follower"))).join("");
     const midTxt = g.mids.length
       ? (g.mids.slice(0,3).map(s=>s.name).join("、") + (g.mids.length>3?` 等${g.mids.length}只`:""))
-      : "无（无≥100亿）";
+      : "无≥100亿的票";
     return `<div class="role-card">
       <div class="role-head">
         <b>${g.name}</b><span class="role-cnt">${g.count} 只涨停</span>
-        <span class="muted">龙头 ${g.leader.name} ｜ 中军 ${midTxt}</span>
+        <span class="muted">龙头 ${g.leader.name} ｜ 中军 <b class="rl-mid">${g.mids.length}只</b>（${midTxt}）</span>
       </div>
       <div style="overflow-x:auto">
         <table class="rtable">
