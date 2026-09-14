@@ -422,11 +422,11 @@
       <div id="themes"></div>
     </div>
     <div class="card" id="sRoles">
-      <h2>⑦ 题材角色 <span class="sub">（龙头大哥 / 板块中军 / 小弟 · 同题材内分角色）</span></h2>
+      <h2>⑦ 题材角色 <span class="sub">（龙头大哥 / 板块中军 / 小弟 · 同题材内分角色 · 市值口径=流通市值）</span></h2>
       <div class="role-legend">
         <span><b class="rl-leader">龙头</b>身位优先 → 连板高 → 首封早 → 封单大</span>
-        <span><b class="rl-mid">中军</b>流通市值最大（≥30亿，最多2只）</span>
-        <span><b class="rl-follower">小弟</b>其余跟风票</span>
+        <span><b class="rl-mid">中军</b>流通市值 ≥100亿（几只算几只，不限数量）</span>
+        <span><b class="rl-follower">小弟</b>流通市值 &lt;100亿 的跟风票</span>
       </div>
       <div id="roles"></div>
     </div>
@@ -1089,6 +1089,7 @@ function renderThemes(){
 }
 
 /* ---------- ⑦ 题材角色：龙头大哥 / 板块中军 / 小弟 ---------- */
+const ROLE_MID_CAP = 100;   // 中军门槛：流通市值 ≥100亿（亿）
 function roleCapClass(c){ return !c ? "cap-s" : (c>=300?"cap-l":(c>=100?"cap-m":"cap-s")); }
 function roleSortKey(a,b){
   // 身位 👑 优先 → 连板高 → 首封早 → 封单大
@@ -1111,7 +1112,7 @@ function computeRoles(){
     const leader = stocks[0];
     const rest = stocks.filter(s=>String(s.code)!==String(leader.code));
     const byCap = rest.slice().sort((a,b)=>((b.lscap||0)-(a.lscap||0))||((b.amount||0)-(a.amount||0)));
-    const mids = byCap.filter(s=>(s.lscap||0)>=30).slice(0,2);
+    const mids = byCap.filter(s=>(s.lscap||0)>=ROLE_MID_CAP);   // ≥100亿即中军，不限只数
     const midSet = new Set(mids.map(s=>String(s.code)));
     const followers = rest.filter(s=>!midSet.has(String(s.code)));
     return {name:t.name, count:stocks.length, leader, mids, followers};
@@ -1165,7 +1166,9 @@ function renderRoles(){
     const rows = [roleRowHtml(g.leader,"leader")]
       .concat(g.mids.map(s=>roleRowHtml(s,"mid")))
       .concat(g.followers.map(s=>roleRowHtml(s,"follower"))).join("");
-    const midTxt = g.mids.length ? g.mids.map(s=>s.name).join("、") : "无";
+    const midTxt = g.mids.length
+      ? (g.mids.slice(0,3).map(s=>s.name).join("、") + (g.mids.length>3?` 等${g.mids.length}只`:""))
+      : "无（无≥100亿）";
     return `<div class="role-card">
       <div class="role-head">
         <b>${g.name}</b><span class="role-cnt">${g.count} 只涨停</span>
@@ -1173,7 +1176,7 @@ function renderRoles(){
       </div>
       <div style="overflow-x:auto">
         <table class="rtable">
-          <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th><th>次日溢价</th></tr></thead>
+          <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值(亿)</th><th>次日溢价</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
