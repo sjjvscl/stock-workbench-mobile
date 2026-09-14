@@ -3,3 +3,4 @@ __pycache__/
 *.log
 .DS_Store
 .git_archival.txt
+v2_template.html
