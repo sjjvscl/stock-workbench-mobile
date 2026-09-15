@@ -1399,14 +1399,23 @@ function computeRoles(){
     return {name:t.name, count:stocks.length, leader, mids, followers};
   }).filter(Boolean).sort((a,b)=>(b.count||0)-(a.count||0));
 }
-function roleRowHtml(s, role, themeName){
+function roleRowHtml(s, role, themeName, maxLbc, earliestCode){
   const nd = DATA.next_day || "T+1";
   const np = s.next_premium;
   const npHtml = np==null ? `<span class="muted" style="font-size:11px">待${nd}</span>`
     : `<b class="${np>=0?'up':'down'}">${np>=0?'+':''}${fmt(np*100,1)}%</b>`;
   const tags = [];
   if(s.is_fanbao) tags.push('<span class="tag tag-fanbao">反包</span>');
-  (s.core||[]).forEach(c=>tags.push(`<span class="tag">${c}</span>`));
+  // 角标口径与 ⑥ 题材表完全一致（用户 2026-09-15 拍板）：
+  //   👑身位 → 只有本题材最高板（需真有位差 maxLbc≥2，全首板组不标）
+  //   💰封单 → 取消，不再显示
+  //   ⚡最早 → 只给低位板里首封最早的那只
+  const isTop = (maxLbc || 0) >= 2 && (s.lbc || 0) === maxLbc;
+  let core = (s.core || []).filter(c => !/⚡最早|💰封单/.test(c));
+  if(!isTop) core = core.filter(c => !/身位/.test(c));
+  else if(!core.some(c => /身位/.test(c))) core = ["👑身位", ...core];
+  if(earliestCode && String(s.code) === earliestCode) core.push("⚡最早");
+  core.forEach(c=>tags.push(`<span class="tag">${c}</span>`));
   // 异业票角标：与题材表同口径（行业白名单 THEME_IND_OK）
   const offInd = themeName ? _indFlagOf(themeName, s.code) : "";
   const offHtml = offInd ? `<span class="tag tag-offind" title="所属行业「${offInd}」与题材「${themeName}」主流不符，疑似蹭概念/跨界">⚠异业</span>` : '';
@@ -1451,9 +1460,21 @@ function renderRoles(){
     const flags = themeIndustryFlags(g.name, all);
     const nOff = Object.keys(flags).length;
     const keep = s => !hideOffInd || !flags[String(s.code)];
-    const rows = [roleRowHtml(g.leader,"leader",g.name)]
-      .concat(g.mids.filter(keep).map(s=>roleRowHtml(s,"mid",g.name)))
-      .concat(g.followers.filter(keep).map(s=>roleRowHtml(s,"follower",g.name))).join("");
+    // 角标基准：整组最高板 + 「低位板」里首封最早的那只（与 ⑥ 题材表同口径）
+    const maxLbc = all.reduce((m,s)=>Math.max(m,s.lbc||0),0);
+    const lows = all.filter(s=>(s.lbc||0) < maxLbc);
+    let earliestCode = null;
+    if(lows.length){
+      const e = lows.reduce((acc,cur)=>{
+        const cf = (cur.first||"").trim() || "99:99:99";
+        const af = (acc.first||"").trim() || "99:99:99";
+        return cf < af ? cur : acc;
+      }, lows[0]);
+      earliestCode = e ? String(e.code) : null;
+    }
+    const rows = [roleRowHtml(g.leader,"leader",g.name,maxLbc,earliestCode)]
+      .concat(g.mids.filter(keep).map(s=>roleRowHtml(s,"mid",g.name,maxLbc,earliestCode)))
+      .concat(g.followers.filter(keep).map(s=>roleRowHtml(s,"follower",g.name,maxLbc,earliestCode))).join("");
     const midTxt = g.mids.length
       ? (g.mids.slice(0,3).map(s=>s.name).join("、") + (g.mids.length>3?` 等${g.mids.length}只`:""))
       : "无≥100亿的票";
