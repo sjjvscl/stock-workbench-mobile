@@ -1288,14 +1288,15 @@ function renderThemes(){
     const isOpen = themeOpen[t.name] !== undefined ? themeOpen[t.name] : idx<3;
     const apHtml = ap==null ? `<span class="muted" style="font-size:11px">次日溢价待${nd}竞价</span>`
       : `<span class="${ap>=0?'up':'down'}" style="font-weight:700;font-size:11px">均溢价 ${ap>=0?'+':''}${fmt(ap*100,1)}%</span>`;
-    // 整组自算唯一"⚡最早"（覆盖数据里可能多写的标记）
+    // ⚡最早 = **低位板**里首封最早的那只（最高板由 👑身位 表达，不重复抢"最早"）
+    const lows = stocks.filter(s=>(s.lbc||0) < maxLbc);
     let earliestCode = null;
-    if(stocks.length){
-      const e = stocks.reduce((acc,cur)=>{
+    if(lows.length){
+      const e = lows.reduce((acc,cur)=>{
         const cf = (cur.first||"").trim() || "99:99:99";
         const af = (acc.first||"").trim() || "99:99:99";
         return cf < af ? cur : acc;
-      }, stocks[0]);
+      }, lows[0]);
       earliestCode = e ? String(e.code) : null;
     }
     const stockRows = stocks.slice().sort((a,b)=>{
@@ -1319,8 +1320,14 @@ function renderThemes(){
       const np = s.next_premium;
       const npHtml = np==null ? `<span class="muted" style="font-size:11px">待${nd}</span>`
         : `<b class="${np>=0?'up':'down'}">${np>=0?'+':''}${fmt(np*100,1)}%</b>`;
-      // 过滤掉数据里可能多写的"⚡最早"，按整组 first 唯一赋值
-      const tags = (s.core||[]).filter(c => !/⚡最早/.test(c));
+      // 角标口径（用户 2026-09-15 拍板）：
+      //   👑身位 → 只有本题材「最高板」才带（需真有位差 maxLbc≥2，全首板组不标）
+      //   💰封单 → 取消，不再显示
+      //   ⚡最早 → 只给低位板里首封最早的那只
+      const isTop = maxLbc >= 2 && (s.lbc||0) === maxLbc;
+      let tags = (s.core||[]).filter(c => !/⚡最早|💰封单/.test(c));
+      if(!isTop) tags = tags.filter(c => !/身位/.test(c));
+      else if(!tags.some(c => /身位/.test(c))) tags = ["👑身位", ...tags];
       if(earliestCode && String(s.code)===earliestCode) tags.push("⚡最早");
       const core = tags.map(c=>`<span class="tcore">${c}</span>`).join('');
       const yjHtml = hasYj(s)?'<span class="tag tag-yj" title="业绩题材叠加，加分项">业绩+</span>':'';
@@ -1353,7 +1360,7 @@ function renderThemes(){
   }).join("") + `<div class="legend" style="margin-top:4px">
       <span><i class="dot" style="background:var(--red)"></i>红=高开延续(留/加)</span>
       <span><i class="dot" style="background:var(--green)"></i>绿=低开一日游(走)</span>
-      <span>👑身位 ⚡最早封板 💰封单最大 · 业绩+=题材叠加加分项 · <span class="tag tag-branch">分支</span>=题材内的产业链环节（点上方分支标签可筛选）</span>
+      <span>👑身位=同题材最高板（唯一） · ⚡最早=低位板中首封最早（先手） · 业绩+=题材叠加加分项 · <span class="tag tag-branch">分支</span>=题材内的产业链环节（点上方分支标签可筛选）</span>
       <span class="offind-toggle${hideOffInd?' on':''}" onclick="toggleOffInd()" title="异业票=所属行业与题材主流不符（如和顺石油·炼化及贸易 挂在半导体题材下）。点此切换显示/隐藏">⚠ 异业票 ${hideOffInd?'已隐藏':'已显示'}</span>
     </div>`;
   el("themes").querySelectorAll("details.theme").forEach(d=>{
