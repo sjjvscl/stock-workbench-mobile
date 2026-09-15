@@ -4,3 +4,4 @@ __pycache__/
 .DS_Store
 .git_archival.txt
 v2_template.html
+build_v2.py
