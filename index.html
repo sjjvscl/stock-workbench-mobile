@@ -59,6 +59,8 @@
   .tag-sub.active{background:var(--blue);color:#fff}
   /* 异业票角标：行业与题材主流不符，疑似蹭概念/跨界（2026-09-15） */
   .tag-offind{background:#fdecec;color:#b3261e;font-weight:700;border:1px solid #f3c9c6;cursor:help}
+  /* 二级分支标签（对齐开盘啦「分支小表格」） */
+  .tag-branch{background:#eef7f2;color:#1f7a52;font-size:10px;padding:0 5px;border-radius:4px;white-space:nowrap}
   .offind-toggle{background:#f4f5f7;color:#5a6472;border:1px solid var(--border);border-radius:6px;padding:1px 8px;cursor:pointer;user-select:none}
   .offind-toggle.on{background:#e7f0fb;color:var(--blue);border-color:#bcd6f5;font-weight:700}
   .sortbtns{display:inline-flex;align-items:center;gap:3px;margin-left:8px;font-size:10px;color:var(--muted)}
@@ -947,6 +949,12 @@ var THEME_RULES = [
   {group:"医药",            re:/药|医药|医疗|制药|疫苗|血制品|CXO|医美/},
   {group:"回购",            re:/回购/},
   {group:"定增",            re:/定增/},
+  /* ↓ 2026-09-15：电池从「电力」拆出独立成「锂电池」（用户口径："汽车电池归类到锂电池里"）。
+     放这么前是故意的——任何含"电池"的标签（汽车电池/动力电池/固态电池/机器人电池…）
+     都要先被锂电池收走，否则会被后面的 机器人/汽车 组按"机器人""汽车"二字抢走。
+     前面这条 氢能 守门规则是为了别把"氢燃料电池/燃料电池"误收进锂电池。 */
+  {group:"电力",            re:/燃料电池|氢能|绿氢/},
+  {group:"锂电池",          re:/锂电|锂矿|锂盐|锂资源|碳酸锂|氢氧化锂|电池|电芯|正极|负极|电解质|电解液|隔膜|六氟|铜箔|集流体|钠电|钠离子|固态电池|动力电池|储能电池|电池回收|锂电设备/},
   {group:"机器人",          re:/机器人/},
   {group:"CPO/光模块",      re:/CPO|光模块|光通信|光器件/},
   {group:"算力/数据中心",   re:/算力|数据中心|IDC|AIDC|智算|超算|液冷|服务器/},
@@ -961,7 +969,8 @@ var THEME_RULES = [
      而真正 6 只联动的风电被埋没。
      注意顺序：汽车在电力之前，"新能源汽车"整词归汽车，单独"新能源"才落电力。 */
   {group:"汽车",            re:/新能源汽车|新能源车|汽车|汽配|整车|客车|商用车|重卡|一体化压铸|无人驾驶|智能驾驶|车联网|一汽/},
-  {group:"电力",            re:/风电|风能|大兆瓦|海上风电|海工|光伏|储能|锂电|锂矿|电池|固态电池|钠电|铜箔|集流体|氢能|充电桩|绿电|清洁能源|新能源|电力|智能电网|特高压|电网|虚拟电厂|输配电|核电|水电|火电|热电|蓄能|发电/},
+  /* 2026-09-15：电池/锂电/铜箔等已移出本组，改由前面的「锂电池」组收走；本组只管发电与电网。 */
+  {group:"电力",            re:/风电|风能|大兆瓦|海上风电|海工|光伏|储能|充电桩|绿电|清洁能源|新能源|电力|智能电网|特高压|电网|虚拟电厂|输配电|核电|水电|火电|热电|蓄能|发电/},
   {group:"消费/食品饮料",   re:/食品|白酒|饮料|啤酒|乳业|零售|免税|旅游|酒店|餐饮|预制菜|零食|电商|纺织|服装/},
   {group:"资源/周期",       re:/有色|稀土|黄金|钢铁|煤炭|石油|油气|磷化工|钛白粉|纯碱|水泥|建材|化工|炭黑/},
 ];
@@ -971,6 +980,140 @@ var THEME_RULES = [
 var THEME_SKIP_RE = /^(?:股权激励|股权收购|股权转让|协议转让|员工持股|资产收购|资产重组|资产注入|海外拓展|海外建厂|海外扩产|泰国基地|越南基地|子公司|完成增资|增资|海工订单|订单|订单增长|客户|大客户|弗迪|大兆瓦|高端部件|成品油|业绩|预增|预盈|扭亏|减亏|回购|定增|中标|合同|签署|战略合作|合作|投资|设立|投产|试产|技改|扩产|产能|获得|通过|获批|受理|发布|亮相|展示|布局|推进|取得|增持|减持|解禁|次新|科创次新|超跌|低价|机构调研|纳入|涨价|分红|更名|易主|重组|剥离|补贴|退税|商誉|诉讼|终止|复牌|高送转|.*国资|参股|概念)/;
 function isEventTag(name){
   return THEME_SKIP_RE.test(String(name||""));
+}
+
+/* ---------- 二级分支表（对齐开盘啦「题材库 → 分支小表格」）----------
+   开盘啦的分级是「主线题材 → 分支 → 细分」，分支按**产业链环节/产品形态**切
+   （例：固态电池 → 设备/负极材料/集成商/正极材料/电解质/隔膜；
+        AI硬件 → 液冷 → 液冷板/系统集成）。
+   我们这边的原始标签是同花顺给的杂词（"风电齿轮箱""MLCC离型膜"），粒度和命名都不统一，
+   所以在这里做一层规范化：原始标签 → 规范分支名，界面上按开盘啦的样子
+   展示「分支名 + 涨停家数」，点分支即筛选。未命中任何规范分支的进「其他」，不丢信息。
+   只写主线名，主题材不在表里时回落到原始标签当分支名。 */
+var SUB_RULES = {
+  "电力": [
+    {sub:"风电",     re:/风电|风能|大兆瓦|海上风电|海工|叶片|塔筒|铸件|轴承|齿轮箱/},
+    {sub:"光伏",     re:/光伏|硅料|组件|逆变器|HJT|TOPCon|钙钛矿|电池片/},
+    {sub:"储能",     re:/储能|蓄能/},
+    {sub:"电网设备", re:/电网|特高压|虚拟电厂|输配电|充电桩|变压器|智能电表/},
+    {sub:"发电运营", re:/电力|发电|核电|水电|火电|热电|清洁能源|绿电/},
+  ],
+  "锂电池": [
+    {sub:"锂矿锂盐",   re:/锂矿|锂盐|锂资源|碳酸锂|氢氧化锂/},
+    {sub:"正极材料",   re:/正极|三元|磷酸铁锂|富锂锰基/},
+    {sub:"负极材料",   re:/负极|石墨|硅碳|锂金属/},
+    {sub:"电解质",     re:/电解质|电解液|六氟|LiTFSI|硫化锂/},
+    {sub:"隔膜",       re:/隔膜/},
+    {sub:"铜箔集流体", re:/铜箔|集流体/},
+    {sub:"电池制造",   re:/电池|电芯|固态|钠离子|钠电|动力电池/},
+    {sub:"锂电设备",   re:/设备|辊压|叠片|整线/},
+    {sub:"电池回收",   re:/回收|梯次/},
+  ],
+  "汽车": [
+    {sub:"整车",       re:/整车|客车|商用车|乘用车|重卡/},
+    {sub:"汽车零部件", re:/汽车零部件|汽配|一体化压铸|轮胎|座椅/},
+    {sub:"智能驾驶",   re:/无人驾驶|智能驾驶|智驾|激光雷达|毫米波|线控/},
+    {sub:"车联网",     re:/车联网|智能座舱|车载/},
+  ],
+  "机器人": [
+    {sub:"核心零部件", re:/丝杠|灵巧手|传感器|电机|减速器|伺服|谐波|编码器|执行器/},
+    {sub:"机器人本体", re:/人形机器人|机器人|具身/},
+    {sub:"轻量化材料", re:/PEEK|碳纤维|轻量化|镁合金/},
+    {sub:"机器视觉",   re:/视觉|力觉|触觉/},
+  ],
+  // 顺序：液冷/电源 必须在 服务器 之前，否则"液冷服务器""AI服务器电源"会被服务器抢走
+  "算力/数据中心": [
+    {sub:"液冷",     re:/液冷|冷板|温控|散热/},
+    {sub:"电源",     re:/电源|UPS|备用电源/},
+    {sub:"服务器",   re:/服务器|整机|代工/},
+    {sub:"IDC",      re:/IDC|AIDC|数据中心|智算|超算|机柜/},
+    {sub:"交换机",   re:/交换机|路由|网络设备/},
+    {sub:"算力租赁", re:/算力|租赁/},
+  ],
+  "CPO/光模块": [
+    {sub:"光模块",   re:/光模块|CPO|800G|1.6T/},
+    {sub:"光器件",   re:/光器件|光引擎|光芯片/},
+    {sub:"光纤光缆", re:/光纤|光缆|油膏/},
+  ],
+  "半导体/芯片": [
+    {sub:"芯片设计",   re:/设计|IP|EDA|MCU|SoC|GPU|CPU|功率半导体|IGBT|存储|DRAM|HBM|NAND|闪存/},
+    {sub:"晶圆制造",   re:/晶圆|代工|制程|IDM/},
+    {sub:"封测",       re:/封测|封装|Chiplet|先进封装/},
+    {sub:"半导体设备", re:/设备|光刻|刻蚀|薄膜/},
+    {sub:"半导体材料", re:/材料|硅片|光刻胶|电子特气|靶材|抛光/},
+    {sub:"第三代半导体", re:/第三代|碳化硅|氮化镓|SiC|GaN/},
+  ],
+  // 顺序：细分在前、笼统的 PCB制造 垫后，否则"PCB用化学试剂""PCB设备"会被 PCB 二字抢走
+  "PCB/覆铜板": [
+    {sub:"覆铜板",     re:/覆铜板|CCL/},
+    {sub:"电子布",     re:/电子布|玻纤|玻纤布/},
+    {sub:"铜箔",       re:/铜箔/},
+    {sub:"电子化学品", re:/化学试剂|化学品|蚀刻液|树脂/},
+    {sub:"PCB设备",    re:/设备/},
+    {sub:"PCB制造",    re:/PCB|HDI|软板|载板/},
+  ],
+  "AI应用/软件": [
+    {sub:"大模型",   re:/大模型|DeepSeek|多模态|人工智能/},
+    {sub:"AI应用",   re:/AI应用|AIGC|AI眼镜|AI手机|智能体|AI终端/},
+    {sub:"信创",     re:/信创|国产软件|鸿蒙|操作系统|数据库/},
+    {sub:"数据要素", re:/数据要素|数据确权/},
+    {sub:"云计算",   re:/云计算|SaaS|IDC/},
+  ],
+  "网络安全": [
+    {sub:"安全软件", re:/安全|网络|数据/},
+    {sub:"信创安全", re:/信创|国产/},
+  ],
+  "军工/低空经济": [
+    {sub:"商业航天", re:/商业航天|卫星|火箭|遥感/},
+    {sub:"低空经济", re:/低空|eVTOL|无人机|通航/},
+    {sub:"军机",     re:/航空|军机|发动机|航发/},
+    {sub:"弹药装备", re:/兵器|弹药|导弹|船舶/},
+    {sub:"雷达卫星", re:/雷达|卫星|北斗|军工电子/},
+  ],
+  "医药": [
+    {sub:"创新药",   re:/创新药|单抗|ADC|CART|减肥药|GLP/},
+    {sub:"CXO",      re:/CXO|CRO|CDMO/},
+    {sub:"中药",     re:/中药|中医/},
+    {sub:"医疗器械", re:/器械|耗材|诊断/},
+    {sub:"原料药",   re:/原料药|制药|医药/},
+    {sub:"医美",     re:/医美/},
+  ],
+  "消费/食品饮料": [
+    {sub:"白酒",     re:/白酒|酒/},
+    {sub:"食品饮料", re:/食品|饮料|乳业|啤酒|零食|预制菜/},
+    {sub:"零售商超", re:/零售|商超|免税|电商/},
+    {sub:"旅游酒店", re:/旅游|酒店|餐饮|免税/},
+    {sub:"纺织服装", re:/纺织|服装|鞋/},
+  ],
+  "资源/周期": [
+    {sub:"有色金属", re:/有色|铜|铝|锌|镍|锡/},
+    {sub:"稀土黄金", re:/稀土|黄金|贵金属|永磁/},
+    {sub:"钢铁煤炭", re:/钢铁|煤炭|焦炭/},
+    {sub:"石油油气", re:/石油|油气|炼化|成品油/},
+    {sub:"化工",     re:/化工|磷化工|钛白粉|纯碱|炭黑|氟化工/},
+    {sub:"水泥建材", re:/水泥|建材|玻璃/},
+  ],
+  "传媒娱乐": [
+    {sub:"影视",     re:/影视|剧|电影/},
+    {sub:"游戏",     re:/游戏|动漫/},
+    {sub:"传媒",     re:/传媒|娱乐|综艺|流媒体|短剧/},
+  ],
+  "农业": [
+    {sub:"种业",     re:/种业|转基因|种子/},
+    {sub:"化肥农药", re:/化肥|农药|复合肥|尿素|磷肥|钾肥|氮肥/},
+    {sub:"养殖",     re:/养殖|猪|鸡|牧业|渔业/},
+    {sub:"农产品",   re:/农产品|粮食|种植|饲料/},
+  ],
+};
+/* 原始标签 → 规范分支名；主题材不在 SUB_RULES 里则返回空串（界面回落到原始标签）。 */
+function themeSubName(theme, raw){
+  const rules = SUB_RULES[theme];
+  if(!rules) return "";
+  const s = String(raw||"");
+  for(var i=0;i<rules.length;i++){
+    if(rules[i].re.test(s)) return rules[i].sub;
+  }
+  return "其他";
 }
 
 /* ---------- 异业票校验（2026-09-15 新增）----------
@@ -985,6 +1128,10 @@ var THEME_IND_OK = {
   // 环境治理/包装印刷/塑料 是刻意保留：上海洗霸(环境治理做固态电池)、英联股份(包装印刷做复合集流体)、
   // 双星新材(塑料做 PET 复合铜箔) 行业都"不像"，但都是被市场当电池材料炒的真票，别误杀。
   "电力":        ["电力","电网设备","风电设备","光伏设备","电池","电源设备","燃气","环境治理","包装印刷","塑料","能源金属","小金属","化学制品","专用设备","通用设备","电机","煤炭"],
+  // 锂电池产业链横跨多个行业：电池/锂矿/化工/塑料(隔膜)/铜箔/设备，跨界转型票多
+  // （上海洗霸=环境治理、英联股份=包装印刷、双星新材=塑料，都是真票，别误杀）；
+  // 炼化及贸易/家居用品/半导体 这类不在表内 → 会被 ⚠ 标出或从通达信板块剔除。
+  "锂电池":      ["电池","电源设备","能源金属","小金属","贵金属","采掘行业","化学制品","化学原料","非金属材料","金属新材料","有色金属","塑料","塑料制品","包装印刷","造纸印刷","环境治理","专用设备","通用设备","自动化设备","电网设备","电池化学品"],
   // IT服务/软件开发 是给一汽系留的口子（启明信息 002232，行业 IT服务，是汽车产业链的软件公司）。
   "汽车":        ["汽车零部件","汽车整车","商用车","乘用车","汽车服务","交运设备","塑料制品","橡胶制品","专用设备","电机","IT服务","软件开发"],
   "半导体/芯片": ["半导体","电子元件","光学光电子","消费电子","电子化学品","计算机设备","专用设备"],
@@ -1063,16 +1210,19 @@ function groupedThemes(){
     const key = themeGroupName(t.name);
     if(key==="业绩") return;
     const g = map[key] = map[key] || {name:key, stocks:[], byCode:{}, subs:{}};
+    const branch = themeSubName(key, t.name);      // 规范分支名（开盘啦式二级）
+    g.subs[t.name] = (g.subs[t.name]||0) + 1;
     (t.stocks||[]).forEach(s=>{
       const code = String(s.code||"");
       if(!code) return;
-      g.subs[t.name] = (g.subs[t.name]||0) + 1;
       const existing = g.byCode[code];
       if(existing){
         if(!existing.__subs.includes(t.name)) existing.__subs.push(t.name);
+        if(branch && !existing.__branches.includes(branch)) existing.__branches.push(branch);
         return;
       }
       s.__subs = [t.name];
+      s.__branches = branch ? [branch] : [];
       g.byCode[code] = s;
       g.stocks.push(s);
     });
@@ -1081,12 +1231,18 @@ function groupedThemes(){
     const g = map[k];
     const prems = g.stocks.map(s=>s.next_premium).filter(v=>v!=null);
     const flags = themeIndustryFlags(g.name, g.stocks);   // {code: 行业} 异业票
+    // 分支 → 涨停家数（去重按股票算，和开盘啦分支小表格的标注口径一致）
+    const branches = {};
+    g.stocks.forEach(s=>(s.__branches||[]).forEach(b=>{ branches[b] = (branches[b]||0) + 1; }));
+    const hasBranch = Object.keys(branches).length > 0;
     return {
       name:g.name,
       zt_count:g.stocks.length,
       avg_premium: prems.length ? prems.reduce((a,b)=>a+b,0)/prems.length : null,
       stocks:g.stocks,
       subs:g.subs,
+      branches: branches,
+      branchMode: hasBranch,        // true=用规范分支名展示；false=回落到原始标签
       indFlags: flags,
       indFlagCount: Object.keys(flags).length,
     };
@@ -1119,10 +1275,13 @@ function renderThemes(){
     const confirmed = (t.zt_count||0)>=3;
     const ap = t.avg_premium;
     const sel = themeSubFilter[t.name] || "";
-    const stocks = (t.stocks||[]).filter(s=>(!sel || (s.__subs||[]).includes(sel))
+    // 分支筛选：有规范分支就用分支，否则回落到原始标签
+    const inSub = s => (t.branchMode ? (s.__branches||[]) : (s.__subs||[])).includes(sel);
+    const stocks = (t.stocks||[]).filter(s=>(!sel || inSub(s))
                                              && (!hideOffInd || !(t.indFlags||{})[String(s.code)]));
-    const subKeys = t.subs ? Object.keys(t.subs).sort((a,b)=>(t.subs[b]||0)-(t.subs[a]||0)).slice(0,6) : [];
-    const subHtml = (sel?'<span class="tag tag-sub active" onclick="event.stopPropagation();event.preventDefault();toggleThemeSub(\''+t.name+'\',\'\')">全部</span>':'') + subKeys.map(k=>`<span class="tag tag-sub${sel===k?' active':''}" onclick="event.stopPropagation();event.preventDefault();toggleThemeSub('${t.name}','${k}')">${k} ${t.subs[k]}家</span>`).join('');
+    const subMap = t.branchMode ? t.branches : t.subs;
+    const subKeys = subMap ? Object.keys(subMap).sort((a,b)=>(subMap[b]||0)-(subMap[a]||0)).slice(0,8) : [];
+    const subHtml = (sel?'<span class="tag tag-sub active" onclick="event.stopPropagation();event.preventDefault();toggleThemeSub(\''+t.name+'\',\'\')">全部</span>':'') + subKeys.map(k=>`<span class="tag tag-sub${sel===k?' active':''}" onclick="event.stopPropagation();event.preventDefault();toggleThemeSub('${t.name}','${k}')">${k} ${subMap[k]}家</span>`).join('');
     const maxLbc = stocks.reduce((m,s)=>Math.max(m,s.lbc||0),0);
     const leader = stocks.slice().sort((a,b)=>(b.lbc||0)-(a.lbc||0))[0];
     const countTxt = sel ? `${stocks.length}/${t.zt_count}` : `${t.zt_count}`;
@@ -1170,8 +1329,10 @@ function renderThemes(){
       const hasKmap = !!KMAP[String(s.code)];
       const clk = hasKmap ? ` onclick="openKline('${s.code}')" title="点击看日K线/分时"` : '';
       const lbcTxt = s.board_label || (s.lbc==0?'首板':s.lbc+'板');
+      const brTxt = t.branchMode ? (s.__branches||[]).join("·") : "";
       return `<tr${clk}>
         <td><b>${s.name||"—"}</b>${core}${yjHtml}${offHtml}${s.has_k && hasKmap?' <span class="tag tag-ws" style="background:#eef4fb;color:#16558f" title="点击看K线">K线</span>':''}</td>
+        <td class="muted" style="font-size:11px">${brTxt?`<span class="tag tag-branch">${brTxt}</span>`:'—'}</td>
         <td class="${s.lbc>=5?'zt':''}">${lbcTxt}</td>
         <td>${fmt(s.fengdan)}</td>
         <td class="muted">${s.first? s.first.slice(0,5):'—'}</td>
@@ -1185,14 +1346,14 @@ function renderThemes(){
         ${subHtml?`<div style="width:100%;margin-top:2px">${subHtml}</div>`:''}
       </summary>
       <table class="tstk">
-        <thead><tr><th>个股</th><th>连板</th><th>封单(亿)</th><th>首封</th><th>次日溢价</th></tr></thead>
+        <thead><tr><th>个股</th><th>分支</th><th>连板</th><th>封单(亿)</th><th>首封</th><th>次日溢价</th></tr></thead>
         <tbody>${stockRows}</tbody>
       </table>
     </details>`;
   }).join("") + `<div class="legend" style="margin-top:4px">
       <span><i class="dot" style="background:var(--red)"></i>红=高开延续(留/加)</span>
       <span><i class="dot" style="background:var(--green)"></i>绿=低开一日游(走)</span>
-      <span>👑身位 ⚡最早封板 💰封单最大 · 业绩+=题材叠加加分项</span>
+      <span>👑身位 ⚡最早封板 💰封单最大 · 业绩+=题材叠加加分项 · <span class="tag tag-branch">分支</span>=题材内的产业链环节（点上方分支标签可筛选）</span>
       <span class="offind-toggle${hideOffInd?' on':''}" onclick="toggleOffInd()" title="异业票=所属行业与题材主流不符（如和顺石油·炼化及贸易 挂在半导体题材下）。点此切换显示/隐藏">⚠ 异业票 ${hideOffInd?'已隐藏':'已显示'}</span>
     </div>`;
   el("themes").querySelectorAll("details.theme").forEach(d=>{
