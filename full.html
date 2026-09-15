@@ -431,7 +431,7 @@
       <h2>⑦ 题材角色 <span class="sub">（龙头大哥 / 板块中军 / 小弟 · 同题材内分角色 · 市值口径=流通市值）</span></h2>
       <div class="role-legend">
         <span><b class="rl-leader">龙头</b>身位优先 → 连板高 → 首封早 → 封单大</span>
-        <span><b class="rl-mid">中军</b>流通市值 ≥100亿（几只算几只，不限数量）</span>
+        <span><b class="rl-mid">中军</b>题材内成交额最大 · 市值最大（只标 1 只）</span>
         <span><b class="rl-follower">小弟</b>流通市值 &lt;100亿 的跟风票</span>
       </div>
       <div id="roles"></div>
@@ -1370,7 +1370,8 @@ function renderThemes(){
 }
 
 /* ---------- ⑦ 题材角色：龙头大哥 / 板块中军 / 小弟 ---------- */
-const ROLE_MID_CAP = 100;   // 中军门槛：流通市值 ≥100亿（亿）
+// 中军口径（2026-09-15 用户拍板）：题材内「成交额最大 + 流通市值最大」的个股，全组只标 1 只。
+// 原口径「流通市值 ≥100亿、几只算几只」已废弃（常量 ROLE_MID_CAP 不再使用）。
 function roleCapClass(c){ return !c ? "cap-s" : (c>=300?"cap-l":(c>=100?"cap-m":"cap-s")); }
 function roleSortKey(a,b){
   // 身位 👑 优先 → 连板高 → 首封早 → 封单大
@@ -1392,8 +1393,11 @@ function computeRoles(){
     if(!isMain && stocks.length < 2) return null;      // 单票事件题材：不划角色
     const leader = stocks[0];
     const rest = stocks.filter(s=>String(s.code)!==String(leader.code));
-    const byCap = rest.slice().sort((a,b)=>((b.lscap||0)-(a.lscap||0))||((b.amount||0)-(a.amount||0)));
-    const mids = byCap.filter(s=>(s.lscap||0)>=ROLE_MID_CAP);   // ≥100亿即中军，不限只数
+    // 中军 = 题材内「成交额最大 + 流通市值最大」的那 1 只（成交额优先，并列比流通市值）
+    // 用户 2026-09-15 拍板，取代原「流通市值≥100亿、几只算几只」
+    const mids = rest.length
+      ? [rest.slice().sort((a,b)=>((b.amount||0)-(a.amount||0))||((b.lscap||0)-(a.lscap||0)))[0]]
+      : [];
     const midSet = new Set(mids.map(s=>String(s.code)));
     const followers = rest.filter(s=>!midSet.has(String(s.code)));
     return {name:t.name, count:stocks.length, leader, mids, followers};
@@ -1477,7 +1481,7 @@ function renderRoles(){
       .concat(g.followers.filter(keep).map(s=>roleRowHtml(s,"follower",g.name,maxLbc,earliestCode))).join("");
     const midTxt = g.mids.length
       ? (g.mids.slice(0,3).map(s=>s.name).join("、") + (g.mids.length>3?` 等${g.mids.length}只`:""))
-      : "无≥100亿的票";
+      : "无（题材内仅龙头 1 只）";
     return `<div class="role-card">
       <div class="role-head">
         <b>${g.name}</b><span class="role-cnt">${g.count} 只涨停</span>
