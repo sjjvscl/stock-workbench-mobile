@@ -195,6 +195,33 @@
   .verdict.stop{background:var(--redbg);color:var(--red);border:1px solid #f0b9b9}
   .verdict.wait{background:#f3f5f9;color:#5a6673;border:1px solid var(--border)}
   .sell-anchor{margin-top:8px;font-size:11.5px;color:#5a6673;background:#f6f8fb;border:1px dashed var(--border);border-radius:8px;padding:6px 10px}
+  /* ===== ⑧ 次日买点预期池 ===== */
+  .bp-rules{font-size:11.5px;line-height:1.7;color:#5a6673;background:#f7f9fc;border:1px solid var(--border);border-radius:9px;padding:8px 11px;margin-bottom:9px}
+  .bp-rules b{color:var(--text)}
+  .bp-rules .bp-k{display:inline-block;font-weight:700;color:var(--blue);margin-right:4px}
+  .bp-tabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
+  .bp-tabs .sortbtn{font-size:11px}
+  .bp-tabs .bp-cnt{font-size:11.5px;color:var(--muted);margin-left:2px}
+  .bp-card{border:1px solid var(--border);border-left:4px solid var(--blue);border-radius:10px;padding:9px 12px;margin-bottom:8px;background:#fbfcff}
+  .bp-card.modeB{border-left-color:var(--amber);background:#fffcf6}
+  .bp-card .bp-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:13.5px}
+  .bp-card .bp-code{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;color:#3b444f}
+  .bp-card .bp-mode{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--bluebg);color:var(--blue)}
+  .bp-card.modeB .bp-mode{background:var(--amberbg);color:var(--amber)}
+  .bp-card .bp-tag{font-size:11px;padding:1px 7px;border-radius:999px;background:#eef2f7;color:#4a5764}
+  .bp-meta{margin-top:5px;font-size:11.5px;color:#5a6673}
+  .bp-meta b{color:var(--text)}
+  .bp-meta .hot{color:var(--red);font-weight:700}
+  .bp-buy{margin-top:7px;font-size:12.5px;line-height:1.65;background:var(--greenbg);border:1px solid #b7e3c5;border-radius:8px;padding:7px 10px}
+  .bp-buy .bp-buy-k{font-weight:700;color:var(--green)}
+  .bp-card.modeB .bp-buy{background:var(--amberbg);border-color:#eed8b0}
+  .bp-card.modeB .bp-buy .bp-buy-k{color:var(--amber)}
+  .bp-gate{margin-top:6px;font-size:11.5px;color:#5a6673;background:#f6f8fb;border:1px dashed var(--border);border-radius:8px;padding:6px 10px}
+  .bp-gate .bp-x{color:var(--red);font-weight:700}
+  .bp-sub{font-size:12px;font-weight:700;color:var(--text);margin:12px 0 6px;padding-left:7px;border-left:3px solid var(--blue)}
+  .bp-sub.modeB{border-left-color:var(--amber)}
+  .bp-sub .bp-sub-n{font-weight:400;color:var(--muted);font-size:11.5px;margin-left:6px}
+  .fbpill{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;background:var(--redbg);color:var(--red);font-weight:700}
   .review-in{border-left:4px solid var(--green)}
   .review-out{border-left:4px solid var(--red)}
   .review-in .sig{color:var(--green)} .review-out .sig{color:var(--red)}
@@ -330,6 +357,7 @@
     <a href="#sTianti">天梯</a>
     <a href="#sThemes">题材</a>
     <a href="#sRoles">角色</a>
+    <a href="#sBuyPool">买点池</a>
     <a href="#sNodes">节点票</a>
     <a href="#sPos">仓位</a>
     <a href="#sRisk">风险</a>
@@ -438,14 +466,22 @@
     </div>
   </div>
 
+  <!-- 次日买点预期池（用户两套模式的收盘扫描：爆量弱转强 / 断板补涨·低位试错） -->
+  <div class="card" id="sBuyPool" style="margin-bottom:12px">
+    <h2>⑧ 次日买点预期池 <span class="sub">（收盘扫全池，只留明日有买点预期的票）</span></h2>
+    <div class="bp-rules" id="bpRules"></div>
+    <div class="bp-tabs" id="bpTabs"></div>
+    <div id="buyPool"></div>
+  </div>
+
   <!-- 节点票机械触发器 + 仓位 -->
   <div class="grid g-main" style="margin-bottom:12px">
     <div class="card" id="sNodes">
-      <h2>⑧ 节点票 / 弱转强机械触发器 <span class="sub">（三项全绿=出手，否则观望）</span></h2>
+      <h2>⑨ 节点票 / 弱转强机械触发器 <span class="sub">（三项全绿=出手，否则观望）</span></h2>
       <div id="nodes"></div>
     </div>
     <div class="card" id="sPos">
-      <h2>⑨ 仓位决策矩阵 <span class="sub">（周期 × 身位 → 建议仓位%）</span></h2>
+      <h2>⑩ 仓位决策矩阵 <span class="sub">（周期 × 身位 → 建议仓位%）</span></h2>
       <div id="posMatrixWrap"></div>
       <h2 style="margin-top:16px;font-size:14px">风险计算器 <span class="sub">（5W本金视角）</span></h2>
       <div class="row" style="margin-top:6px">
@@ -461,11 +497,11 @@
   <!-- 风险扫描 + 明日计划 -->
   <div class="grid g-main" style="margin-bottom:12px">
     <div class="card" id="sRisk">
-      <h2>⑩ 风险扫描 <span class="sub">（开板/反包/烂板 → 明日回避清单）</span></h2>
+      <h2>⑪ 风险扫描 <span class="sub">（开板/反包/烂板 → 明日回避清单）</span></h2>
       <div id="riskScan"></div>
     </div>
     <div class="card" id="sPlan">
-      <h2>⑪ 明日计划 <span class="sub">（竞价确认后回来执行）</span></h2>
+      <h2>⑫ 明日计划 <span class="sub">（竞价确认后回来执行）</span></h2>
       <div id="planList"></div>
       <div id="planChecklist"></div>
       <div id="scriptBox"></div>
@@ -475,11 +511,11 @@
   <!-- 复盘 + 纪律 -->
   <div class="grid g-main" style="margin-bottom:12px">
     <div class="card" id="sReview">
-      <h2>⑫ 收盘复盘 <span class="sub">（模式内/外分类 · P&L归因 · 错误账本）</span></h2>
+      <h2>⑬ 收盘复盘 <span class="sub">（模式内/外分类 · P&L归因 · 错误账本）</span></h2>
       <div id="review"></div>
     </div>
     <div class="card" id="sDiscipline">
-      <h2>⑬ 纪律卡 <span class="sub">（模式内定义 · 禁入行为）</span></h2>
+      <h2>⑭ 纪律卡 <span class="sub">（模式内定义 · 禁入行为）</span></h2>
       <div class="consistency" id="consistencyBox"></div>
       <ul class="disc" id="discipline"></ul>
     </div>
@@ -532,6 +568,12 @@ window.WB_DATES_INLINE={"data_20260918.json":{"date":"2026-09-18","next_day":"20
 <script>
 /* 全市场个股 → 所属行业（东财 f100，由 fetch_industry_map.py 缓存后注入），异业票校验用 */
 window.WB_INDUSTRY={"000002": "房地产开发", "000410": "通用设备", "000504": "医疗服务", "000509": "光学光电子", "000532": "多元金融", "000910": "家居用品", "001211": "家居用品", "001212": "装修建材", "001216": "家居用品", "001229": "计算机设备", "001233": "汽车零部件", "001238": "文娱用品", "001317": "铁路公路", "001332": "专用设备", "001376": "电力", "001399": "光学光电子", "002005": "小家电", "002029": "服装家纺", "002134": "元件", "002161": "其他电子Ⅱ", "002185": "半导体", "002285": "房地产服务", "002298": "电网设备", "002300": "电网设备", "002453": "化学制品", "002471": "电网设备", "002589": "医药商业", "002623": "光伏设备", "002713": "装修装饰Ⅱ", "002836": "包装印刷", "002849": "通用设备", "002965": "汽车零部件", "002971": "化学制品", "002980": "电网设备", "003041": "服装家纺", "301390": "工程咨询服务Ⅱ", "301583": "半导体", "301689": "通用设备", "600127": "农产品加工", "600261": "照明设备Ⅱ", "600343": "通用设备", "600448": "纺织制造", "600577": "电网设备", "600606": "房地产开发", "600621": "证券Ⅱ", "600630": "服装家纺", "600640": "广告营销", "600719": "电力", "600838": "一般零售", "600847": "电池", "600881": "综合Ⅱ", "601026": "风电设备", "601086": "一般零售", "601123": "冶钢原料", "601133": "专业工程", "601579": "非白酒", "601811": "出版", "603001": "服装家纺", "603016": "电网设备", "603068": "半导体", "603118": "通信设备", "603120": "化学制品", "603122": "医疗服务", "603138": "IT服务Ⅱ", "603230": "出版", "603232": "软件开发", "603248": "风电设备", "603316": "半导体", "603353": "炼化及贸易", "603375": "半导体", "603402": "旅游及景区", "603626": "消费电子", "603686": "环境治理", "603725": "家居用品", "605188": "一般零售", "688175": "军工电子Ⅱ", "688292": "计算机设备"};
+</script>
+<script>
+/* 昨日 2 板以上今日断板的票（build_v2.py 跨日比对注入），⑧ 次日买点预期池 B 组用。
+   字段：{code,name,lbc,is_top,reason,theme}；is_top=昨日最高板（空间板）。
+   ⚠ 断板是跨日概念，前端只有当日的 WB_DATA，所以这份清单必须在 build 阶段算好带进来。 */
+window.WB_BREAK=[{"code":"605058","name":"澳弘电子","lbc":5,"is_top":true,"reason":"PCB.HDI板.服务器电源","theme":"PCB"},{"code":"003026","name":"中晶科技","lbc":3,"is_top":false,"reason":"半导体硅片.订单充足.股权激励","theme":"半导体硅片"},{"code":"002655","name":"共达电声","lbc":2,"is_top":false,"reason":"拟参投硅臻芯片.AI算力.电声元器件.苹果概念","theme":"拟参投硅臻芯片"},{"code":"003001","name":"中岩大地","lbc":2,"is_top":false,"reason":"PCB刀具.核电工程.岩土固化","theme":"PCB刀具"},{"code":"600371","name":"万向德农","lbc":2,"is_top":false,"reason":"玉米种业.转基因玉米.新品研发","theme":"玉米种业"}];
 </script>
 <script>
 window.WB_HIST_MIN={};
@@ -1587,6 +1629,247 @@ function renderNodes(){
   }).join("");
 }
 
+/* ---------- ⑧ 次日买点预期池 ----------
+   按用户的两套出手模式，收盘扫一遍全池，只留「明日有买点预期」的票。
+
+   模式A 爆量后弱转强（题材带头股 / 空间板）
+     打的是分歧转一致：今天放巨量说明分歧很大，明天若低开被资金接住，就是机械化买点。
+     入选 = 地位（题材内最高板≥2板，或全市场最高板）+ 爆量（量比≥BP_VR_MIN）+ 有分歧（换手板或开过板）。
+     一字板/缩量板天然没分歧，弱转强无从谈起，必须排除。
+
+   模式B 空间板断板后的补涨 / 低位试错
+     断板当天市场高度下移，资金要么做断板票反包，要么在同题材低位找补涨。
+     入选 = 昨日 2 板以上今日断板（build 阶段跨日比对后注入 window.WB_BREAK）
+            → 用归并题材名找今日同组、板位 ≤BP_LOW_MAX 的票。
+
+   ⚠ 所有阈值集中在下面三个常量，改这里即可，别散落到各处。
+   ------------------------------------ */
+var BP_VR_MIN  = 1.8;   // 模式A：量比下限（今日量 / 前5日均量）
+var BP_LOW_MAX = 2;     // 模式B：补涨候选板位上限
+var BP_MAX_SHOW = 6;    // 每组最多显示几只
+var bpTab = "all";      // "all" | "a" | "b"
+
+function bpSetVr(v){
+  const n = parseFloat(v);
+  if(!isNaN(n) && n > 0){ BP_VR_MIN = n; renderBuyPool(); }
+}
+function bpSetTab(t){ bpTab = t; renderBuyPool(); }
+
+function volRatioOf(t){
+  // 量比 = 今日成交量 / 前5日均量。kline.daily 每根 = [date,o,h,l,c,amount(元),vol(手)]
+  const k = t && t.kline, d = (k && k.daily) || [];
+  if(d.length < 7) return null;
+  const ds = String((DATA||{}).date || "").replace(/-/g, "");
+  if(String(d[d.length-1][0]) !== ds) return null;   // 末根必须就是数据日，否则说明K线没跟上
+  const base = d.slice(-6, -1);
+  const av = base.reduce((s, x) => s + (x[6] || 0), 0) / base.length;
+  return av > 0 ? (d[d.length-1][6] || 0) / av : null;
+}
+
+function bpRefPrice(t){
+  // 参考价取今日涨停价（涨停股收盘即涨停价）。kline.limit_price 有就直接用，缺了退回收盘。
+  const k = (t && t.kline) || {}, d = k.daily || [];
+  if(k.limit_price != null) return k.limit_price;
+  return d.length ? d[d.length-1][4] : null;
+}
+
+function bpThemeIndex(){
+  // code → 所属归并题材组列表；组名 → 组内最高板。与 ⑥⑦ 同源（都走 themeGroupName + isEventTag）。
+  const groups = {}, lead = {};
+  (DATA.themes || []).forEach(th => {
+    if(isEventTag(th.name)) return;
+    const g = themeGroupName(th.name);
+    if(g === "业绩") return;
+    (th.stocks || []).forEach(s => {
+      const c = String(s.code || ""); if(!c) return;
+      const arr = groups[c] = groups[c] || [];
+      if(arr.indexOf(g) < 0) arr.push(g);
+      lead[g] = Math.max(lead[g] || 0, s.lbc || 0);
+    });
+  });
+  return { groups: groups, lead: lead };
+}
+
+function buildPoolA(){
+  const lu = DATA.tianti || [];
+  const maxLbc = ((DATA.market || {}).max_lbc) || 0;
+  const idx = bpThemeIndex();
+  const out = [];
+  lu.forEach(t => {
+    const c = String(t.code || ""), lbc = t.lbc || 0;
+    if(lbc < 2) return;
+    const gs = idx.groups[c] || [];
+    const isTop = (lbc === maxLbc);
+    const isLead = gs.some(g => lbc === (idx.lead[g] || 0));
+    if(!isTop && !isLead) return;
+    const vr = volRatioOf(t);
+    if(vr == null || vr < BP_VR_MIN) return;
+    const fenqi = /换手板/.test(t.board || "") || (t.open_times || 0) >= 1;
+    if(!fenqi) return;                              // 一字板/缩量板没有分歧，不是弱转强的料
+    out.push({ t:t, lbc:lbc, vr:vr, group:(gs[0]||t.theme||"—"),
+               role: isTop ? "空间板" : "题材龙头", both: isTop && isLead });
+  });
+  out.sort((a, b) => (b.lbc - a.lbc) || (b.vr - a.vr));
+  return out;
+}
+
+function bpGroupOfRaw(reason, theme){
+  // 断板票只带原始点分标签，逐个试归并规则，取第一个能在今日题材组里落地的组名。
+  const today = {};
+  (DATA.themes || []).forEach(t => { today[themeGroupName(t.name)] = 1; });
+  const cands = String(reason || "").split(".").map(s => s.trim()).filter(Boolean);
+  if(theme) cands.push(String(theme));
+  for(let i = 0; i < cands.length; i++){
+    const g = themeGroupName(cands[i]);
+    if(today[g]) return g;
+  }
+  return null;
+}
+
+function buildPoolB(){
+  // 按「归并题材组」聚合：同一组里今天断了好几只票时，只出一张卡、候选算一次，
+  // 断板票并列写在标题里（否则同组会重复输出同一批候选，纯噪声）。
+  const brk = (window.WB_BREAK || []).slice();
+  if(!brk.length) return [];
+  const byCode = {};
+  (DATA.tianti || []).forEach(t => { byCode[String(t.code)] = t; });
+  const gmap = {};
+  groupedThemes().forEach(g => { gmap[g.name] = g; });
+  const bucket = {};
+  brk.forEach(b => {
+    const gname = bpGroupOfRaw(b.reason, b.theme);
+    if(!gname || !gmap[gname]) return;
+    if(!bucket[gname]){
+      const all = (gmap[gname].stocks || [])
+        .filter(s => (s.lbc || 0) <= BP_LOW_MAX)
+        .map(s => {
+          const full = byCode[String(s.code)] || {};
+          return { s:s, vr: volRatioOf(full), fd:(s.fengdan || 0), amt:(s.amount || 0) };
+        });
+      if(!all.length) return;                    // 今日该题材没有低位承接票 → 整组跳过
+      all.sort((x, y) => ((x.s.lbc || 0) - (y.s.lbc || 0)) || (y.fd - x.fd));
+      bucket[gname] = { group:gname, broke:[], cands:all.slice(0, 4) };
+    }
+    bucket[gname].broke.push(b);
+  });
+  const out = [];
+  Object.keys(bucket).forEach(k => {
+    const g = bucket[k];
+    const dc = {};
+    g.broke.forEach(b => { dc[String(b.code)] = 1; });
+    g.cands = g.cands.filter(c => !dc[String(c.s.code)]);   // 断板票自己不当候选
+    if(!g.cands.length) return;
+    // 组内断板排序：空间板优先 → 板位高优先
+    g.broke.sort((a, b) => ((b.is_top ? 1 : 0) - (a.is_top ? 1 : 0)) || (b.lbc - a.lbc));
+    out.push(g);
+  });
+  out.sort((a, b) => ((b.broke[0].is_top ? 1 : 0) - (a.broke[0].is_top ? 1 : 0)) || (b.broke[0].lbc - a.broke[0].lbc));
+  return out;
+}
+
+function bpKReg(t){
+  // 注册 K 线可点（与 ⑧ 同款），返回是否可点
+  const k = t && t.kline, code = String((t && t.code) || "");
+  const hasK = !!(k && k.daily && k.daily.length);
+  if(hasK && code && !KMAP[code]){
+    KMAP[code] = { name:t.name, code:t.code, daily:k.daily || [], intraday:k.intraday || [],
+                   prev_close:k.prev_close, limit_price:k.limit_price, minutesByDate:{}, curMinDate:null };
+    if(k.intraday && k.intraday.length && DATA.date) KMAP[code].minutesByDate[DATA.date] = k.intraday;
+  }
+  return hasK;
+}
+
+function bpCardA(x){
+  const t = x.t, code = String(t.code || "");
+  const hasK = bpKReg(t);
+  const clk = hasK ? ` onclick="openKline('${code}')" title="点击看日K线/分时" style="cursor:pointer"` : '';
+  const ref = bpRefPrice(t);
+  const lo = ref != null ? ref * 0.96 : null;
+  const hi = ref != null ? ref * 1.03 : null;
+  const no = ref != null ? ref * 1.04 : null;
+  const priceTxt = ref != null
+    ? `弱转强区 <b>¥${fmt(lo,2)} ~ ¥${fmt(hi,2)}</b> ｜ 放弃线 ¥${fmt(no,2)}（竞价高于此价不追）`
+    : "参考价待K线补齐";
+  const tags = [];
+  if(x.both) tags.push('<span class="bp-tag">空间板+题材龙头</span>');
+  else tags.push(`<span class="bp-tag">${x.role}</span>`);
+  tags.push(`<span class="bp-tag">${x.group}</span>`);
+  return `<div class="bp-card"${clk}>
+    <div class="bp-head">
+      <b>${t.name}</b><span class="bp-code">${code}</span>
+      <span class="lbc">${t.board_label || ((t.lbc||0)+"板")}</span>
+      ${tags.join("")}
+      <span class="bp-mode">A 爆量弱转强</span>
+      ${hasK ? '<span class="bp-tag" title="点击看日K线/分时">K线</span>' : ''}
+    </div>
+    <div class="bp-meta">量比 <b class="hot">${fmt(x.vr,2)}</b> ｜ ${t.board || "—"} ｜ 开板 ${t.open_times||0} 次 ｜ 封单 ${fmt(t.fengdan||0,2)}亿 ｜ 成交 ${fmt(t.amount||0,2)}亿 ｜ 首封 ${t.first || "—"}</div>
+    <div class="bp-buy"><span class="bp-buy-k">明日买点预期：</span>竞价 <b>-4% ~ +3%</b>（低开或平开才是弱转强的前提）→ 开盘 5 分钟内站上分时均价线 且 量比 ≥ 2 → 试仓<br>${priceTxt}</div>
+    <div class="bp-gate">放弃：竞价高于 +4%（追高不给机会） ｜ 高开后一路走低不接 ｜ 止损：跌破分时均价线且 3 分钟不收回，或破今日最低 ${ref != null ? "¥"+fmt(ref*0.94,2) : ""}</div>
+  </div>`;
+}
+
+function bpCardB(x){
+  const b = x.broke[0];
+  const names = x.broke.map(z =>
+    `${z.name} <span class="muted">${z.code}</span> 昨${z.lbc}板${z.is_top ? ' <span class="fbpill">空间板</span>' : ''}`
+  ).join(' ｜ ');
+  const head = `<div class="bp-sub modeB">✂ 断板：${names} ｜ 题材 ${x.group}<span class="bp-sub-n">下方为同题材今日 ≤${BP_LOW_MAX} 板的补涨候选</span></div>`;
+  const cands = x.cands.map(c => {
+    const s = c.s, code = String(s.code || "");
+    const full = (DATA.tianti || []).filter(t => String(t.code) === code)[0];
+    const hasK = full ? bpKReg(full) : false;
+    const clk = hasK ? ` onclick="openKline('${code}')" title="点击看日K线/分时" style="cursor:pointer"` : '';
+    const vrTxt = c.vr != null ? `量比 <b class="${c.vr>=BP_VR_MIN?'hot':''}">${fmt(c.vr,2)}</b>` : "量比 —";
+    return `<div class="bp-card modeB"${clk}>
+      <div class="bp-head">
+        <b>${s.name}</b><span class="bp-code">${code}</span>
+        <span class="lbc">${s.board_label || ((s.lbc||0)+"板")}</span>
+        <span class="bp-tag">${x.group}</span>
+        <span class="bp-mode">B 断板补涨</span>
+      </div>
+      <div class="bp-meta">${vrTxt} ｜ 封单 ${fmt(c.fd,2)}亿 ｜ 成交 ${fmt(c.amt,2)}亿 ｜ 首封 ${s.first || "—"}</div>
+      <div class="bp-buy"><span class="bp-buy-k">明日买点预期：</span>先看断板票 ${b.name} 的竞价，低开不超 -5% 且开盘 15 分钟不破前低 → 本票竞价 <b>0 ~ +3%</b> 低吸或回踩均价线不破时介入</div>
+      <div class="bp-gate">放弃：<span class="bp-x">${b.name} 低开走弱或跌停</span>（资金要撤，补涨也扛不住） ｜ 止损：跌破今日分时均价线</div>
+    </div>`;
+  }).join("");
+  return head + cands;
+}
+
+function renderBuyPool(){
+  const box = el("buyPool"); if(!box) return;
+  const rules = el("bpRules");
+  if(rules && !rules.dataset.done){
+    rules.dataset.done = "1";
+    rules.innerHTML =
+      `<span class="bp-k">A 爆量弱转强</span>题材带头股 / 空间板 ｜ 量比 ≥ <input id="bpVrMin" type="number" step="0.1" min="1" value="${BP_VR_MIN}" oninput="bpSetVr(this.value)" style="width:56px;font-size:12px;padding:1px 5px;border:1px solid var(--border);border-radius:5px">（今日量/前5日均量）｜ 须有分歧：换手板或开过板<br>` +
+      `<span class="bp-k">B 断板补涨</span>昨日 2 板以上今日断板 → 同题材今日 ≤${BP_LOW_MAX} 板的低位票`;
+  }
+  const A = buildPoolA(), B = buildPoolB();
+  window.WB_BUYPOOL_STATE = { a:A, b:B, vrMin:BP_VR_MIN, tab:bpTab, window:inModeWindow() };
+
+  const tabs = el("bpTabs");
+  if(tabs){
+    const mk = (k, txt, n) => `<button type="button" class="sortbtn${bpTab===k?' active':''}" onclick="bpSetTab('${k}')">${txt}<span class="bp-cnt"> ${n}</span></button>`;
+    tabs.innerHTML = mk("all","全部",A.length+B.length) + mk("a","爆量弱转强",A.length) + mk("b","断板补涨",B.length);
+  }
+
+  const win = inModeWindow();
+  let html = "";
+  if(!win){
+    html += `<div class="verdict watch">⚠ 当前不在「启动 / 主升」窗口（${(DATA.cycle||{}).stage||"—"}）→ 池内标的只做观察，动手要按退潮期纪律打折或直接放弃</div>`;
+  }
+  if(bpTab !== "b"){
+    html += `<div class="bp-sub">A · 爆量弱转强<span class="bp-sub-n">${A.length} 只｜明天低开被接住就是买点</span></div>`;
+    html += A.length ? A.slice(0, BP_MAX_SHOW).map(bpCardA).join("") : '<div class="empty">今日没有符合「题材带头 / 空间板 + 放量 + 有分歧」的标的</div>';
+    if(A.length > BP_MAX_SHOW) html += `<div class="muted" style="font-size:11.5px">还有 ${A.length-BP_MAX_SHOW} 只未显示（可调高量比阈值收窄）</div>`;
+  }
+  if(bpTab !== "a"){
+    html += `<div class="bp-sub modeB">B · 断板补涨 / 低位试错<span class="bp-sub-n">${B.length} 个断板题材｜今天的断板就是明天的补涨线索</span></div>`;
+    html += B.length ? B.slice(0, 4).map(bpCardB).join("") : '<div class="empty">昨日无 2 板以上断板，或断板题材今日没有低位承接票</div>';
+  }
+  box.innerHTML = html;
+}
+
 /* ---------- 仓位决策矩阵（新） ---------- */
 function stageKeyForMatrix(stage){
   const s = String(stage||"");
@@ -2327,6 +2610,7 @@ function renderAll(){
   renderPlan();
   renderOpening();
   renderDiscipline();
+  renderBuyPool();
   renderPosMatrix();
   calcPos();
   renderRuleBar();
