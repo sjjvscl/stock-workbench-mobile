@@ -326,6 +326,56 @@
   td.rr-cap.cap-l{color:var(--purple);font-weight:700}
   td.rr-cap.cap-m{color:var(--blue)}
   td.rr-cap.cap-s{color:var(--muted)}
+
+  /* ---------- ⑮ 爆量涨停选股器（D:/炒股/screener 盘后扫描结果，build 时注入） ---------- */
+  #sScreener .sc-bar{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;color:var(--muted);padding:2px 0 10px;align-items:baseline}
+  #sScreener .sc-bar b{color:var(--text);font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+  #sScreener .sc-bar b.hot{color:var(--red)}
+  #sScreener .sc-tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:9px}
+  #sScreener .sc-note{font-size:11px;color:var(--muted)}
+  #sScreener .sc-list{display:flex;flex-direction:column;gap:8px}
+  #sScreener .sc-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:2px 10px;align-items:start;
+    border:1px solid var(--border);border-radius:10px;padding:9px 11px;background:#fff;cursor:pointer;
+    transition:border-color .15s,box-shadow .15s}
+  #sScreener .sc-row:hover{border-color:var(--blue);box-shadow:0 1px 8px rgba(22,85,143,.08)}
+  #sScreener .sc-row.sc-out{opacity:.6;cursor:default}
+  #sScreener .sc-row.sc-out:hover{border-color:var(--border);box-shadow:none}
+  #sScreener .sc-rk{font-weight:800;font-size:15px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+  #sScreener .sc-rk.top{color:var(--red)}
+  #sScreener .sc-nm{font-weight:700;font-size:14px;color:var(--text);word-break:break-all}
+  #sScreener .sc-nm .sc-cd{font-weight:400;font-size:11px;color:var(--muted);margin-left:5px;font-family:ui-monospace,Consolas,monospace}
+  #sScreener .sc-tg{display:inline-block;font-size:11px;padding:1px 6px;border-radius:5px;background:var(--bluebg);color:var(--blue);margin-left:5px;font-weight:600;vertical-align:1px}
+  #sScreener .sc-tg.none{background:#eef1f5;color:var(--muted)}
+  #sScreener .sc-mt{font-size:11.5px;color:var(--muted);margin-top:4px;display:flex;flex-wrap:wrap;gap:2px 12px}
+  #sScreener .sc-mt b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+  #sScreener .sc-mt b.hot{color:var(--red)}
+  #sScreener .sc-rs{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.5;overflow:hidden;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  #sScreener .sc-sc{text-align:right;min-width:54px}
+  #sScreener .sc-sc b{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+  #sScreener .sc-tier{display:inline-block;font-size:10.5px;padding:1px 6px;border-radius:4px;margin-top:3px;font-weight:600}
+  #sScreener .sc-tier.core{background:var(--redbg);color:var(--red)}
+  #sScreener .sc-tier.pick{background:var(--amberbg);color:var(--amber)}
+  #sScreener .sc-tier.out{background:#eef1f5;color:var(--muted)}
+  #sScreener .sc-sp{display:flex;height:5px;border-radius:3px;overflow:hidden;margin-top:6px;background:#eef1f5;gap:1px}
+  #sScreener .sc-sp i{display:block;height:100%}
+  #sScreener .sc-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+  #sScreener .sc-ch{font-size:10.5px;padding:1px 6px;border-radius:9px;background:#f2f5f9;color:var(--muted);border:1px solid var(--border)}
+  #sScreener .sc-ch.k{background:var(--redbg);color:var(--red);border-color:transparent;font-weight:600}
+  #sScreener .sc-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:var(--muted);margin-top:7px}
+  #sScreener .sc-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+  #sScreener .sc-th{margin-top:14px}
+  #sScreener table.sc-tt{width:100%;border-collapse:collapse;font-size:12px}
+  #sScreener table.sc-tt th{font-size:10.5px;color:var(--muted);font-weight:600;text-align:left;padding:5px 7px;
+    border-bottom:1px solid var(--border);background:#fcfdff;position:static;z-index:auto}
+  #sScreener table.sc-tt td{padding:5px 7px;border-bottom:1px solid #f2f4f8}
+  #sScreener table.sc-tt td.num{text-align:right;font-variant-numeric:tabular-nums}
+  #sScreener table.sc-tt tr.cur td{background:var(--bluebg)}
+  @media(max-width:720px){
+    #sScreener .sc-row{grid-template-columns:24px minmax(0,1fr) auto;padding:8px 9px}
+    #sScreener .sc-sc b{font-size:16px}
+    #sScreener table.sc-tt .hide-sm{display:none}
+  }
 </style>
 </head>
 <body>
@@ -526,6 +576,15 @@
     </div>
   </div>
 
+  <!-- 爆量涨停选股器（D:/炒股/screener 盘后扫描，build_v2.py 注入 out/screen_<date>.json） -->
+  <div class="card" id="sScreener" style="margin-bottom:12px">
+    <h2>⑮ 爆量涨停选股器 <span class="sub">（今日涨停 且 成交额 &gt; 前 120 日最高 ｜ 题材热度 × 池子容量 × 个股质量）</span></h2>
+    <div id="screenerBar"></div>
+    <div id="screenerTabs"></div>
+    <div id="screenerBody"></div>
+    <div id="screenerThemes"></div>
+  </div>
+
   <div class="muted" style="font-size:11px;text-align:center;margin-top:14px;color:#9aa6b2">
     V2 工作台 · 数据格式与 V1 完全兼容（WB_DATA / WB_DATES_INLINE / hist 懒加载）· 红涨绿跌 · 手机可用
   </div>
@@ -559,6 +618,7 @@
   <a href="#sNodes">节点</a>
   <a href="#sPos">仓位</a>
   <a href="#sPlan">明日</a>
+  <a href="#sScreener">选股</a>
 </nav>
 
 <script>
@@ -579,6 +639,11 @@ window.WB_INDUSTRY={"000498": "基础建设", "000592": "林业Ⅱ", "000593": "
    字段：{code,name,lbc,is_top,reason,theme}；is_top=昨日最高板（空间板）。
    ⚠ 断板是跨日概念，前端只有当日的 WB_DATA，所以这份清单必须在 build 阶段算好带进来。 */
 window.WB_BREAK=[{"code":"000910","name":"大亚圣象","lbc":4,"is_top":true,"reason":"七腾机器人.PCB概念.铝板带.电池箔","theme":"七腾机器人"},{"code":"000560","name":"我爱我家","lbc":3,"is_top":false,"reason":"房产经纪.二手房复苏.AI应用","theme":"房产经纪"},{"code":"600503","name":"华丽家族","lbc":3,"is_top":false,"reason":"房地产开发.机器人.创新药.“华”字辈","theme":"房地产开发"},{"code":"600743","name":"华远控股","lbc":3,"is_top":false,"reason":"控股股东拟变更.物业管理.酒店管理.“华”字辈","theme":"控股股东拟变更"},{"code":"603636","name":"南威软件","lbc":3,"is_top":false,"reason":"AI应用出海.政务智能体.算力租赁","theme":"AI应用出海"},{"code":"600418","name":"江淮汽车","lbc":2,"is_top":false,"reason":"尊界.华为合作.玛莎拉蒂合作传闻","theme":"尊界"},{"code":"605058","name":"澳弘电子","lbc":2,"is_top":false,"reason":"PCB.HDI板.AI服务器电源.泰国基地","theme":"PCB"}];
+</script>
+<script>
+/* 爆量涨停选股器结果（D:/炒股/screener 盘后产出，build_v2.py 读 screener/out/screen_<date>.json 注入），⑮ 用。
+   字段见 build_v2.py:build_screener_info()。缺失/日期不匹配时注入 null，⑮ 自动降级为一行提示，不报错。 */
+window.WB_SCREENER={"date":"20260924","generated":"2026-09-24 22:38:40","market":{"limit_up":51,"max_board":6,"surge_pass":12},"params":{"lookback":120,"theme_window":20,"theme_recent":5},"stocks":[{"code":"600843","name":"上工申贝","bnum":2,"high_days":"2天2板","limit_up_type":"换手板","reason":"缝制设备+机器人缝制+轻型飞机","theme":"机器人","close":8.37,"turnover":12.0805,"float_mv_yi":39.3,"amt_yi":4.47,"amt_max120_yi":3.7,"ratio":1.21,"vr5":6.99,"vr20":10.5,"hist_high":true,"order_amount_yi":0.13,"open_num":0,"theme_today_n":8,"theme_uniq20":73,"theme_hits5":33,"theme_hits20":109,"imagination":10,"qnotes":["换手充分","同板位最早封板"],"score":90.3,"tier":"核心关注","rank":1,"is_leader":false,"earliest":true,"score_surge":27,"score_heat":25.0,"score_space":23.3,"score_quality":13},{"code":"002819","name":"东方中科","bnum":2,"high_days":"2天2板","limit_up_type":"换手板","reason":"网络分析仪+半导体测试+具身智能","theme":"半导体/芯片","close":26.66,"turnover":7.8823,"float_mv_yi":63.0,"amt_yi":4.94,"amt_max120_yi":2.2,"ratio":2.25,"vr5":5.86,"vr20":6.12,"hist_high":true,"order_amount_yi":0.98,"open_num":2,"theme_today_n":5,"theme_uniq20":79,"theme_hits5":46,"theme_hits20":114,"imagination":19,"qnotes":["炸板2次","题材身位票(2板)"],"score":89.0,"tier":"核心关注","rank":2,"is_leader":true,"earliest":false,"score_surge":29,"score_heat":25.0,"score_space":25.0,"score_quality":6},{"code":"301311","name":"昆船智能","bnum":1,"high_days":"首板","limit_up_type":"换手板","reason":"中船系+智能物流+仓储软件+央企背景","theme":"军工/低空经济","close":17.98,"turnover":14.1021,"float_mv_yi":43.2,"amt_yi":5.7,"amt_max120_yi":3.06,"ratio":1.86,"vr5":4.49,"vr20":8.75,"hist_high":true,"order_amount_yi":0.07,"open_num":1,"theme_today_n":5,"theme_uniq20":44,"theme_hits5":19,"theme_hits20":57,"imagination":20,"qnotes":["封单弱","换手充分","题材身位票(1板)"],"score":89.0,"tier":"核心关注","rank":3,"is_leader":true,"earliest":false,"score_surge":30,"score_heat":25.0,"score_space":25.0,"score_quality":5},{"code":"600802","name":"福建水泥","bnum":2,"high_days":"2天2板","limit_up_type":"换手板","reason":"海峡两岸+福建国资+水泥","theme":"资源/周期","close":6.62,"turnover":15.3799,"float_mv_yi":30.3,"amt_yi":4.19,"amt_max120_yi":3.82,"ratio":1.1,"vr5":1.88,"vr20":2.4,"hist_high":true,"order_amount_yi":0.76,"open_num":0,"theme_today_n":2,"theme_uniq20":81,"theme_hits5":32,"theme_hits20":131,"imagination":13,"qnotes":["封单较强","换手充分","题材身位票(2板)","同板位最早封板"],"score":88.0,"tier":"核心关注","rank":4,"is_leader":true,"earliest":true,"score_surge":19,"score_heat":22.0,"score_space":25.0,"score_quality":16},{"code":"000905","name":"厦门港务","bnum":1,"high_days":"首板","limit_up_type":"换手板","reason":"海峡两岸+港口物流+资产重组","theme":"并购重组","close":9.81,"turnover":5.6307,"float_mv_yi":72.8,"amt_yi":3.9,"amt_max120_yi":3.39,"ratio":1.15,"vr5":1.86,"vr20":2.19,"hist_high":false,"order_amount_yi":1.18,"open_num":0,"theme_today_n":5,"theme_uniq20":49,"theme_hits5":39,"theme_hits20":80,"imagination":16,"qnotes":[],"score":87.0,"tier":"核心关注","rank":5,"is_leader":false,"earliest":false,"score_surge":27,"score_heat":25.0,"score_space":25.0,"score_quality":10},{"code":"002205","name":"国统股份","bnum":1,"high_days":"首板","limit_up_type":"换手板","reason":"风电混塔+PCCP管道+央企控股","theme":"电力","close":12.78,"turnover":9.4134,"float_mv_yi":23.8,"amt_yi":2.01,"amt_max120_yi":1.26,"ratio":1.6,"vr5":3.71,"vr20":4.88,"hist_high":true,"order_amount_yi":0.41,"open_num":1,"theme_today_n":8,"theme_uniq20":84,"theme_hits5":29,"theme_hits20":131,"imagination":11,"qnotes":["换手充分"],"score":85.2,"tier":"核心关注","rank":6,"is_leader":false,"earliest":false,"score_surge":26,"score_heat":25.0,"score_space":24.2,"score_quality":10},{"code":"002238","name":"天威视讯","bnum":3,"high_days":"3天3板","limit_up_type":"换手板","reason":"广电网络+网络安全+数据中心","theme":"算力/数据中心","close":8.43,"turnover":10.8231,"float_mv_yi":67.7,"amt_yi":7.23,"amt_max120_yi":1.05,"ratio":6.87,"vr5":13.52,"vr20":15.73,"hist_high":true,"order_amount_yi":0.13,"open_num":3,"theme_today_n":4,"theme_uniq20":110,"theme_hits5":35,"theme_hits20":169,"imagination":22,"qnotes":["封单弱","炸板3次","换手充分","题材身位票(3板)"],"score":79.0,"tier":"核心关注","rank":7,"is_leader":true,"earliest":false,"score_surge":23,"score_heat":24.0,"score_space":25.0,"score_quality":3},{"code":"002029","name":"七匹狼","bnum":1,"high_days":"首板","limit_up_type":"换手板","reason":"投资半导体及机器人+男装夹克+海峡两岸","theme":"海峡两岸","close":9.26,"turnover":9.3487,"float_mv_yi":61.6,"amt_yi":5.66,"amt_max120_yi":4.45,"ratio":1.27,"vr5":1.96,"vr20":2.87,"hist_high":true,"order_amount_yi":0.26,"open_num":4,"theme_today_n":10,"theme_uniq20":16,"theme_hits5":14,"theme_hits20":29,"imagination":24,"qnotes":["炸板4次","换手充分"],"score":75.0,"tier":"优选","rank":8,"is_leader":false,"earliest":false,"score_surge":27,"score_heat":25.0,"score_space":18.0,"score_quality":5},{"code":"002164","name":"宁波东力","bnum":1,"high_days":"首板","limit_up_type":"换手板","reason":"股东增持+机器人减速器+定增扩产","theme":"机器人","close":13.06,"turnover":14.9331,"float_mv_yi":62.7,"amt_yi":9.22,"amt_max120_yi":9.14,"ratio":1.01,"vr5":2.83,"vr20":6.59,"hist_high":true,"order_amount_yi":0.25,"open_num":6,"theme_today_n":8,"theme_uniq20":73,"theme_hits5":33,"theme_hits20":109,"imagination":10,"qnotes":["炸板6次","换手充分"],"score":72.3,"tier":"优选","rank":9,"is_leader":false,"earliest":false,"score_surge":19,"score_heat":25.0,"score_space":23.3,"score_quality":5},{"code":"603230","name":"内蒙新华","bnum":6,"high_days":"7天6板","limit_up_type":"换手板","reason":"出版发行+教材教辅+文化消费+“华”字辈","theme":"传媒娱乐","close":18.47,"turnover":20.4194,"float_mv_yi":65.3,"amt_yi":13.12,"amt_max120_yi":11.93,"ratio":1.1,"vr5":1.98,"vr20":5.58,"hist_high":true,"order_amount_yi":0.17,"open_num":6,"theme_today_n":3,"theme_uniq20":39,"theme_hits5":22,"theme_hits20":80,"imagination":5,"qnotes":["封单弱","炸板6次","换手充分","题材身位票(6板)"],"score":70.2,"tier":"优选","rank":10,"is_leader":true,"earliest":false,"score_surge":19,"score_heat":23.0,"score_space":19.2,"score_quality":5},{"code":"600189","name":"泉阳泉","bnum":1,"high_days":"首板","limit_up_type":"换手板","reason":"园林剥离+天然矿泉水+全国扩张","theme":"未归类","close":9.1,"turnover":5.3821,"float_mv_yi":65.1,"amt_yi":3.41,"amt_max120_yi":2.33,"ratio":1.46,"vr5":3.09,"vr20":3.69,"hist_high":true,"order_amount_yi":0.4,"open_num":1,"theme_today_n":0,"theme_uniq20":0,"theme_hits5":0,"theme_hits20":0,"imagination":0,"qnotes":[],"score":37,"tier":"不入选","rank":11,"is_leader":false,"earliest":false,"score_surge":30,"score_heat":0,"score_space":0,"score_quality":7},{"code":"000498","name":"山东路桥","bnum":1,"high_days":"首板","limit_up_type":"T字板","reason":"大股东增持+基建工程+海外业务","theme":"未归类","close":5.65,"turnover":3.8399,"float_mv_yi":81.9,"amt_yi":3.14,"amt_max120_yi":1.93,"ratio":1.63,"vr5":5.59,"vr20":6.6,"hist_high":true,"order_amount_yi":0.6,"open_num":1,"theme_today_n":0,"theme_uniq20":0,"theme_hits5":0,"theme_hits20":0,"imagination":0,"qnotes":["换手低（一字/缩量，难买入）"],"score":36,"tier":"不入选","rank":12,"is_leader":false,"earliest":false,"score_surge":30,"score_heat":0,"score_space":0,"score_quality":6}],"theme_top":[{"name":"海峡两岸","today":10,"hits5":14,"hits20":29,"uniq":16},{"name":"机器人","today":8,"hits5":33,"hits20":109,"uniq":73},{"name":"电力","today":8,"hits5":29,"hits20":131,"uniq":84},{"name":"半导体/芯片","today":5,"hits5":46,"hits20":114,"uniq":79},{"name":"并购重组","today":5,"hits5":39,"hits20":80,"uniq":49},{"name":"军工/低空经济","today":5,"hits5":19,"hits20":57,"uniq":44},{"name":"医药","today":4,"hits5":41,"hits20":86,"uniq":52},{"name":"算力/数据中心","today":4,"hits5":35,"hits20":169,"uniq":110},{"name":"汽车","today":4,"hits5":18,"hits20":65,"uniq":50},{"name":"AI应用/软件","today":3,"hits5":35,"hits20":104,"uniq":67},{"name":"消费/食品饮料","today":3,"hits5":33,"hits20":124,"uniq":64},{"name":"传媒娱乐","today":3,"hits5":22,"hits20":80,"uniq":39},{"name":"资源/周期","today":2,"hits5":32,"hits20":131,"uniq":81},{"name":"机械/装备","today":2,"hits5":19,"hits20":52,"uniq":34},{"name":"CPO/光模块","today":2,"hits5":12,"hits20":74,"uniq":48},{"name":"地产/家居","today":1,"hits5":35,"hits20":82,"uniq":39},{"name":"PCB/覆铜板","today":1,"hits5":15,"hits20":65,"uniq":38},{"name":"农业","today":1,"hits5":8,"hits20":86,"uniq":46},{"name":"体外诊断","today":1,"hits5":4,"hits20":7,"uniq":3},{"name":"电子雷管","today":1,"hits5":2,"hits20":3,"uniq":1},{"name":"多元化布局","today":1,"hits5":2,"hits20":3,"uniq":1},{"name":"鸭业全产业链","today":1,"hits5":2,"hits20":3,"uniq":1},{"name":"男装夹克","today":1,"hits5":2,"hits20":2,"uniq":1},{"name":"连锁服务","today":1,"hits5":2,"hits20":2,"uniq":1},{"name":"贴牌加工","today":1,"hits5":2,"hits20":2,"uniq":1},{"name":"电子测量仪器","today":1,"hits5":2,"hits20":2,"uniq":2},{"name":"玻璃基封装","today":1,"hits5":2,"hits20":2,"uniq":1},{"name":"网络分析仪","today":1,"hits5":2,"hits20":2,"uniq":1},{"name":"矿业整合","today":1,"hits5":2,"hits20":2,"uniq":1},{"name":"林业主业","today":1,"hits5":1,"hits20":5,"uniq":1}]};
 </script>
 <script>
 window.WB_HIST_MIN={};
@@ -2835,6 +2900,132 @@ function loadDate(file){
     });
 }
 
+/* ---------- ⑮ 爆量涨停选股器（D:/炒股/screener 盘后扫描结果，build 时注入 window.WB_SCREENER） ---------- */
+const SC = window.WB_SCREENER || null;
+let scTab = "picks";   // picks = 入选（核心关注 + 优选） | all = 含「爆量但题材不达标」
+const SC_TIER_CLS = {"核心关注":"core","优选":"pick","不入选":"out"};
+/* 四维评分：满分与配色跟选股器 screener.py 的 WEIGHTS 一致 */
+const SC_SPLIT = [
+  {k:"score_surge",   t:"爆量强度", max:30, c:"#c92a1e"},
+  {k:"score_heat",    t:"题材热度", max:25, c:"#b26a12"},
+  {k:"score_space",   t:"池子容量", max:25, c:"#16558f"},
+  {k:"score_quality", t:"个股质量", max:20, c:"#64707d"},
+];
+function scEsc(s){ return String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function scNum(v,d){ return (v==null||v===""||isNaN(v)) ? "—" : Number(v).toFixed(d==null?2:d); }
+function scSetTab(k){ scTab = k; renderScreener(); }
+/* KMAP 兜底：选股池的票都来自涨停池，正常已在 renderTianti() 里注册；
+   若用户切过天梯筛选导致漏注册，这里按 DATA.tianti 补一次，保证点击能弹窗。 */
+function scRegisterKMAP(){
+  ((SC && SC.stocks) || []).forEach(s=>{
+    const code = String(s.code || "");
+    if(!code || KMAP[code]) return;
+    const r = (DATA.tianti || []).find(x=>String(x.code) === code);
+    const k = r && r.kline;
+    if(!k || !k.daily) return;
+    KMAP[code] = {name:r.name, code:r.code, daily:k.daily||[], intraday:k.intraday||[],
+                  prev_close:k.prev_close, limit_price:k.limit_price, minutesByDate:{}, curMinDate:null};
+    if(k.intraday && k.intraday.length && DATA.date) KMAP[code].minutesByDate[DATA.date] = k.intraday;
+  });
+}
+function scRow(s){
+  const code = String(s.code || "");
+  const hasK = !!KMAP[code];
+  const tier = s.tier || "";
+  const split = SC_SPLIT.map(x=>{
+    const v = Math.max(0, Math.min(Number(s[x.k])||0, x.max));
+    return `<i style="width:${(x.max ? v/x.max*100 : 0).toFixed(2)}%;background:${x.c}" title="${x.t} ${scNum(s[x.k],1)} / ${x.max}"></i>`;
+  }).join("");
+  const tgn = s.theme ? `<span class="sc-tg">${scEsc(s.theme)}</span>` : `<span class="sc-tg none">题材未达标</span>`;
+  const chips = [`<span class="sc-ch">爆量 ${scNum(s.ratio)}×</span>`];
+  if(s.theme_today_n) chips.push(`<span class="sc-ch k">题材今日 ${s.theme_today_n} 板</span>`);
+  if(s.theme_uniq20)  chips.push(`<span class="sc-ch">题材 20 日 ${s.theme_uniq20} 只</span>`);
+  if(s.is_leader)     chips.push(`<span class="sc-ch k">题材身位票</span>`);
+  if(s.earliest)      chips.push(`<span class="sc-ch">同板位最早封板</span>`);
+  if(s.hist_high)     chips.push(`<span class="sc-ch">历史新高量</span>`);
+  (s.qnotes || []).forEach(q=>chips.push(`<span class="sc-ch">${scEsc(q)}</span>`));
+  return `<div class="sc-row${hasK ? "" : " sc-out"}"${hasK ? ` onclick="openKline('${code}')" title="点击看日K + 当日分时"` : ""}>
+      <div class="sc-rk${(s.rank||99)<=3 ? " top" : ""}">${s.rank || ""}</div>
+      <div>
+        <div class="sc-nm">${scEsc(s.name)}<span class="sc-cd">${code}</span>${tgn}
+          <span class="muted" style="font-size:11px;font-weight:400">${scEsc(s.high_days||"")}${s.limit_up_type ? " · " + scEsc(s.limit_up_type) : ""}</span>
+        </div>
+        <div class="sc-mt">
+          <span>成交 <b class="hot">${scNum(s.amt_yi)}亿</b> / 前高 ${scNum(s.amt_max120_yi)}亿</span>
+          <span>换手 <b>${scNum(s.turnover,1)}%</b></span>
+          <span>流通 <b>${scNum(s.float_mv_yi,0)}亿</b></span>
+          <span>量比5 <b>${scNum(s.vr5,1)}</b></span>
+          <span>封单 <b>${scNum(s.order_amount_yi)}亿</b></span>
+        </div>
+        <div class="sc-rs">${scEsc(s.reason)}</div>
+        <div class="sc-chips">${chips.join("")}</div>
+        <div class="sc-sp">${split}</div>
+      </div>
+      <div class="sc-sc">
+        <b style="color:${tier==="不入选" ? "var(--muted)" : "var(--text)"}">${scNum(s.score,1)}</b>
+        <div><span class="sc-tier ${SC_TIER_CLS[tier]||"out"}">${scEsc(tier)}</span></div>
+        <div class="muted" style="font-size:10px;margin-top:3px">${hasK ? "点看K线" : "无K数据"}</div>
+      </div>
+    </div>`;
+}
+function renderScreener(){
+  const bar = el("screenerBar"), tabs = el("screenerTabs"), box = el("screenerBody"), th = el("screenerThemes");
+  if(!box) return;
+  /* 选股器只在扫描日产出，切到其它历史日时不能拿这一天冒充（会误导） */
+  const scD = String((SC && SC.date) || "").replace(/-/g, "");
+  const curD = String((DATA && DATA.date) || "").replace(/-/g, "");
+  const stale = !!(SC && scD && curD && scD !== curD);
+  const dash = s => s.length === 8 ? `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6)}` : s;
+  if(!SC || !SC.stocks || !SC.stocks.length || stale){
+    if(bar) bar.innerHTML = ""; if(tabs) tabs.innerHTML = ""; if(th) th.innerHTML = "";
+    box.innerHTML = stale
+      ? `<div class="empty">当前看的是 ${dash(curD)}，选股器只扫到 ${dash(scD)} 那天，不做跨日冒充。<br><span class="sc-note">切回 ${dash(scD)} 即可看结果；要更新就跑 D:/炒股/screener/run_all.py，再执行 build_v2.py 重建工作台。</span></div>`
+      : `<div class="empty">当天没有选股结果。<br><span class="sc-note">先跑 D:/炒股/screener/run_all.py，再重新执行 build_v2.py 构建工作台，结果会自动带进来。</span></div>`;
+    return;
+  }
+  scRegisterKMAP();
+  const m = SC.market || {}, p = SC.params || {};
+  const picks = SC.stocks.filter(s=>s.tier !== "不入选");
+  const outs  = SC.stocks.filter(s=>s.tier === "不入选");
+  if(bar) bar.innerHTML =
+    `<span>涨停 <b>${m.limit_up!=null?m.limit_up:"—"}</b></span>` +
+    `<span>最高板 <b>${m.max_board!=null?m.max_board:"—"}</b></span>` +
+    `<span>爆量通过 <b>${m.surge_pass!=null?m.surge_pass:"—"}</b></span>` +
+    `<span>达标入选 <b class="hot">${picks.length}</b></span>` +
+    `<span>口径 前 <b>${p.lookback||120}</b> 日量能 · 题材窗 <b>${p.theme_recent||5}</b>/<b>${p.theme_window||20}</b> 日</span>` +
+    `<span>扫描 <b>${scEsc(SC.generated||"—")}</b></span>` +
+    `<div class="sc-note" style="flex-basis:100%;margin-top:2px">入选三条：① 今日涨停 且 今日成交额 &gt; 前 120 日最高成交额 ② 题材近 20 日爆发过且池子 ≥5 只 ③ 题材想象空间 + 板位/封单/换手质量分。分数 = 爆量强度 30 + 题材热度 25 + 池子容量 25 + 个股质量 20，题材身位票 +4、同板位最早封板 +2。</div>`;
+  if(tabs) tabs.innerHTML =
+    `<button type="button" class="sortbtn${scTab==="picks" ? " active" : ""}" onclick="scSetTab('picks')">达标入选<span class="bp-cnt"> ${picks.length}</span></button>` +
+    `<button type="button" class="sortbtn${scTab==="all" ? " active" : ""}" onclick="scSetTab('all')">含爆量未达标<span class="bp-cnt"> ${SC.stocks.length}</span></button>` +
+    `<span class="sc-note">按分数降序 · 点卡片看日K + 分时</span>`;
+  const list = scTab === "all" ? SC.stocks : picks;
+  box.innerHTML = `<div class="sc-list">${list.map(scRow).join("")}</div>
+    <div class="sc-legend">${SC_SPLIT.map(x=>`<span><i style="background:${x.c}"></i>${x.t}（满分 ${x.max}）</span>`).join("")}</div>`
+    + (scTab === "picks" && outs.length ? `<div class="sc-note" style="margin-top:6px">另有 ${outs.length} 只爆量但题材未达标（${outs.map(s=>scEsc(s.name)).join("、")}），已收在「含爆量未达标」里，不建议做。</div>` : "");
+
+  const tt = (SC.theme_top || []).slice(0, 10);
+  if(th && tt.length){
+    const mx = Math.max.apply(null, tt.map(t=>t.today||0)) || 1;
+    th.innerHTML = `<div class="sc-th">
+      <h2 style="font-size:13px;margin:0 0 6px">题材热度榜 <span class="sub">（今日涨停家数 / 近5日 / 近20日累计 · 池子容量看出现在该题材的股票只数）</span></h2>
+      <table class="sc-tt">
+        <thead><tr><th>题材</th><th class="num">今日</th><th class="num hide-sm">近5日</th><th class="num">近20日</th><th class="num">池子(只)</th><th class="hide-sm">热度</th></tr></thead>
+        <tbody>${tt.map((t,i)=>{
+          const hot = (t.today||0) >= 3, pc = (t.today||0)/mx*100;
+          return `<tr class="${i===0 ? "cur" : ""}">
+            <td>${scEsc(t.name)}${hot ? ' <span class="sc-ch k">主线</span>' : ""}</td>
+            <td class="num"><b style="color:${hot ? "var(--red)" : "var(--text)"}">${t.today||0}</b></td>
+            <td class="num hide-sm">${t.hits5||0}</td>
+            <td class="num">${t.hits20||0}</td>
+            <td class="num">${t.uniq||0}</td>
+            <td class="hide-sm"><div style="height:6px;border-radius:3px;background:#eef1f5;overflow:hidden"><i style="display:block;height:100%;width:${pc.toFixed(1)}%;background:${hot ? "var(--red)" : "var(--blue)"}"></i></div></td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table></div>`;
+  } else if(th) th.innerHTML = "";
+}
+
 /* ---------- 主渲染 ---------- */
 function renderAll(){
   renderMeta();
@@ -2853,6 +3044,7 @@ function renderAll(){
   renderDiscipline();
   renderBuyPool();
   renderPosMatrix();
+  renderScreener();
   calcPos();
   renderRuleBar();
   fillInlineMinutes();
