@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>竞价题材角色</title>
+<style>
+  :root{
+    --up:#e54545; --down:#18a058; --ink:#1f2329; --muted:#8a919c;
+    --line:#e8eaee; --card:#fff; --bg:#f5f6f8; --accent:#2f54eb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:10px}
+  .wrap{max-width:1100px;margin:0 auto}
+  header.top{position:sticky;top:0;z-index:9;background:var(--bg);padding:6px 2px 8px;border-bottom:1px solid var(--line)}
+  h1{font-size:17px;font-weight:700}
+  h1 .sub{font-size:12px;color:var(--muted);font-weight:400;margin-left:8px}
+  #status{font-size:12px;color:var(--muted);margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+  #status .pill{display:inline-block;padding:1px 8px;border-radius:9px;font-weight:700}
+  .pill-wait{background:#fff7e6;color:#d48806}
+  .pill-ok{background:#f6ffed;color:#389e0d}
+  .pill-ing{background:#e6f4ff;color:#0958d9}
+  .pill-bad{background:#fff1f0;color:#cf1322}
+  .role-card{background:var(--card);border:1px solid var(--line);border-radius:10px;margin:12px 0;overflow:hidden}
+  .role-head{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);font-size:13px}
+  .role-head>b{font-size:15px}
+  .role-cnt{color:#fff;background:var(--up);border-radius:9px;padding:0 8px;font-size:11px;font-weight:700}
+  .role-head .muted{color:var(--muted);font-size:12px}
+  .rl-mid{color:var(--accent)}
+  .avg{font-size:11px;font-weight:700}
+  .sortbtns{margin-left:auto;display:flex;gap:4px;align-items:center}
+  .sortbtn-label{font-size:11px;color:var(--muted)}
+  .sortbtn{border:1px solid var(--line);background:#fff;border-radius:6px;padding:1px 9px;font-size:12px;cursor:pointer;color:var(--ink)}
+  .sortbtn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  table.rtable{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap}
+  .rtable th{background:#fafbfc;color:var(--muted);font-weight:400;font-size:11px;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+  .rtable td{padding:6px 8px;border-bottom:1px solid #f2f3f5}
+  .rtable tr:last-child td{border-bottom:none}
+  .rr-role{font-weight:700;width:1%}
+  .rr-leader .rr-role{color:var(--up)}
+  .rr-mid .rr-role{color:var(--accent)}
+  .rr-leader{background:#fff7f6}
+  .rr-mid{background:#f6f9ff}
+  .rr-code{color:var(--muted);font-size:12px}
+  .rr-name{font-weight:700}
+  .rr-cap{font-size:12px}
+  .cap-l{color:#722ed1}.cap-m{color:var(--accent)}.cap-s{color:var(--muted)}
+  .up{color:var(--up);font-weight:700}
+  .down{color:var(--down);font-weight:700}
+  .muted{color:var(--muted)}
+  .tag{display:inline-block;background:#f0f1f4;border-radius:4px;padding:0 4px;font-size:10px;color:#5a616c;margin-left:3px;vertical-align:1px}
+  .tag-fanbao{background:#fff1f0;color:#cf1322}
+  .tag-ths{background:#f0f5ff;color:#2f54eb;margin-left:0;margin-right:3px}
+  .tag-ths-ev{background:#f0f1f4;color:#a0a6b0}
+  .rr-ths{white-space:normal;line-height:1.7}
+  .empty{padding:30px;text-align:center;color:var(--muted)}
+  footer{font-size:11px;color:var(--muted);text-align:center;padding:14px 0 22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>竞价题材角色<span class="sub">龙头大哥 / 板块中军 / 小弟 · 竞价一结束自动填溢价</span></h1>
+    <div id="status">加载中…</div>
+  </header>
+  <div id="roles"></div>
+  <footer id="foot"></footer>
+</div>
+<script id="auctionData" type="application/json">__AUCTION_DATA__</script>
+<script>
+(function(){
+"use strict";
+var EMBED = null;
+try{ EMBED = JSON.parse(document.getElementById("auctionData").textContent); }
+catch(e){ document.getElementById("roles").innerHTML = '<div class="empty">页面数据损坏</div>'; return; }
+var GROUPS = EMBED.groups || [];
+var sortMode = {};            // 组名 -> role/first/premium
+var merged = false;           // 溢价是否已合并
+var tries = 0;
+var WEEK = ["日","一","二","三","四","五","六"];
+
+function fmt(x, d){
+  if(x==null || isNaN(x)) return "—";
+  var v = Number(x);
+  return v.toFixed(d==null?2:d);
+}
+function weekdayOf(s){        // "2026-09-24" -> 周几
+  try{ return "周" + WEEK[new Date(s + "T00:00:00").getDay()]; }catch(e){ return ""; }
+}
+function hmNow(){
+  var n = new Date();
+  return n.getHours()*10000 + n.getMinutes()*100 + n.getSeconds();
+}
+function today8(){
+  var n = new Date();
+  return "" + n.getFullYear() + ("0"+(n.getMonth()+1)).slice(-2) + ("0"+n.getDate()).slice(-2);
+}
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+/* ---------- 状态行 ---------- */
+function setStatus(extra){
+  var el = document.getElementById("status");
+  var hm = hmNow();
+  var isT1 = (today8() === String(EMBED.t1||""));
+  var parts = [];
+  parts.push("<span>数据日 <b>" + esc(EMBED.date) + "（" + weekdayOf(EMBED.date) + "）</b></span>");
+  parts.push("<span>涨停 <b>" + (EMBED.limit_up||EMBED.total||"—") + "</b> 只</span>");
+  if(merged){
+    parts.push('<span class="pill pill-ok">溢价已更新 ' + merged.at + (merged.via?(" · "+merged.via):"") + "</span>");
+  }else if(isT1 && hm < 92503){
+    parts.push('<span class="pill pill-ing">竞价进行中，09:25 后自动填溢价</span>');
+  }else{
+    parts.push('<span class="pill pill-wait">待' + esc(EMBED.next_day||"T+1") + ' 竞价' + (tries?(" · 已尝试 "+tries+" 次"):"") + "</span>");
+  }
+  if(extra) parts.push("<span>" + extra + "</span>");
+  el.innerHTML = parts.join("");
+}
+
+/* ---------- 渲染 ---------- */
+function premiumHtml(p){
+  if(p==null) return '<span class="muted" style="font-size:11px">待' + esc(EMBED.next_day||"T+1") + "</span>";
+  var pct = p*100;
+  return '<b class="' + (p>=0?"up":"down") + '">' + (p>=0?"+":"") + fmt(pct,1) + "%</b>";
+}
+function rowHtml(it, role){
+  var tags = (it.tags||[]).map(function(c){
+    return '<span class="tag' + (c==="反包"?" tag-fanbao":"") + '">' + esc(c) + "</span>";
+  }).join("");
+  var ths = (it.ths||[]).map(function(t){
+    return '<span class="tag tag-ths' + (t.ev?" tag-ths-ev":"") + '">' + esc(t.t) + "</span>";
+  }).join("") || '<span class="muted" style="font-size:11px">—</span>';
+  var roleTxt = role==="leader" ? "龙头" : (role==="mid" ? "中军"
+    : (role==="orphan" ? '<span class="muted" style="font-size:11px">' + esc(it.orp||"其他") + "</span>" : "小弟"));
+  var cap = it.lscap || 0;
+  var capCls = !cap ? "cap-s" : (cap>=300?"cap-l":(cap>=100?"cap-m":"cap-s"));
+  return '<tr class="rr-' + role + '">'
+    + '<td class="rr-role">' + roleTxt + "</td>"
+    + '<td class="rr-code">' + esc(it.code) + "</td>"
+    + '<td class="rr-name">' + esc(it.name) + tags + "</td>"
+    + '<td class="rr-bl">' + esc(it.bl||"") + "</td>"
+    + "<td>" + esc(it.first||"—") + "</td>"
+    + "<td>" + (it.fengdan?fmt(it.fengdan,2):"—") + "</td>"
+    + "<td>" + (it.amount?fmt(it.amount,1):"—") + "</td>"
+    + '<td class="rr-cap ' + capCls + '">' + (cap?Math.round(cap)+"亿":"—") + "</td>"
+    + "<td>" + premiumHtml(it.premium) + "</td>"
+    + '<td class="rr-ths">' + ths + "</td></tr>";
+}
+function render(){
+  var box = document.getElementById("roles");
+  if(!GROUPS.length){ box.innerHTML = '<div class="empty">暂无题材角色数据</div>'; return; }
+  box.innerHTML = GROUPS.map(function(g){
+    var mode = sortMode[g.name] || "role";
+    var items = g.items.slice();
+    if(mode === "first"){
+      items.sort(function(a,b){
+        var af = String(a.first||"99:99:99"), bf = String(b.first||"99:99:99");
+        if(af !== bf) return af < bf ? -1 : 1;
+        return (b.fengdan||0)-(a.fengdan||0);
+      });
+    }else if(mode === "premium"){
+      items.sort(function(a,b){
+        var ap = (a.premium==null?-Infinity:a.premium), bp = (b.premium==null?-Infinity:b.premium);
+        if(bp !== ap) return bp - ap;
+        return (b.fengdan||0)-(a.fengdan||0);
+      });
+    }
+    var rows = items.map(function(it){ return rowHtml(it, it.role); }).join("");
+    // 组内均溢价（溢价合并后才显示，与 ⑥ 题材表「均溢价」同口径）
+    var avgHtml = "";
+    var ps = g.items.filter(function(it){ return it.premium!=null; });
+    if(ps.length){
+      var avg = ps.reduce(function(m,it){ return m + it.premium; }, 0) / ps.length;
+      avgHtml = ' <span class="avg ' + (avg>=0?"up":"down") + '">均溢价 ' + (avg>=0?"+":"") + fmt(avg*100,1) + "%</span>";
+    }
+    var midTxt = (g.mids && g.mids.length) ? g.mids.join("、") : "无";
+    var headMeta = g.orphan
+      ? '共 ' + g.count + ' 只 ｜ 各自的' + (g.orphanLabel||"板块") + '当天只有它一只涨停，进不了正常分组（按成交额降序）'
+      : '龙头 ' + esc(g.leaderName||"") + ' ｜ 中军 <b class="rl-mid">' + (g.mids||[]).length + '只</b>（' + esc(midTxt) + '）';
+    return '<div class="role-card"><div class="role-head">'
+      + "<b>" + esc(g.name) + '</b><span class="role-cnt">' + g.count + " 只涨停</span>" + avgHtml
+      + '<span class="muted">' + headMeta + "</span>"
+      + '<span class="sortbtns"><span class="sortbtn-label">按</span>'
+      + '<button type="button" class="sortbtn' + (mode==="first"?" active":"") + '" data-g="' + esc(g.name) + '" data-m="first">首封</button>'
+      + '<button type="button" class="sortbtn' + (mode==="premium"?" active":"") + '" data-g="' + esc(g.name) + '" data-m="premium">溢价</button>'
+      + "</span></div>"
+      + '<div style="overflow-x:auto"><table class="rtable"><thead><tr>'
+      + "<th>" + (g.orphan?(g.orphanLabel||"板块"):"角色") + "</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th>"
+      + "<th>封单(亿)</th><th>成交额(亿)</th><th>流通市值(亿)</th><th>次日溢价</th><th>同花顺题材</th>"
+      + "</tr></thead><tbody>" + rows + "</tbody></table></div></div>";
+  }).join("");
+  document.getElementById("foot").textContent =
+    "页面构建 " + (EMBED.build||"") + " ｜ 分组口径 " + (EMBED.group_src||"") + " ｜ 溢价来源 premium.json（GitHub API 直读，失败退同源）";
+}
+
+/* ---------- 溢价拉取与合并 ---------- */
+var API_URL = "https://api.github.com/repos/sjjvscl/stock-workbench-mobile/contents/premium.json?ref=main";
+function fetchWithTimeout(url, opt, ms){
+  return new Promise(function(resolve, reject){
+    var ctl = ("AbortController" in window) ? new AbortController() : null;
+    var timer = setTimeout(function(){ if(ctl) ctl.abort(); reject(new Error("timeout")); }, ms||8000);
+    var o = opt || {};
+    if(ctl) o.signal = ctl.signal;
+    fetch(url, o).then(function(r){
+      clearTimeout(timer); resolve(r);
+    }, function(e){ clearTimeout(timer); reject(e); });
+  });
+}
+function fetchPremium(){
+  // 通道 1：GitHub contents API raw（近实时，push 后几秒内可读；未认证限流 60 次/小时，失败只变慢）
+  return fetchWithTimeout(API_URL, {headers:{Accept:"application/vnd.github.raw"}, cache:"no-store"}, 8000)
+    .then(function(r){
+      if(!r.ok) throw new Error("api " + r.status);
+      return r.json().then(function(d){ if(d && d.items) return {d:d, via:"API"}; throw new Error("api bad"); });
+    })
+    .catch(function(){
+      // 通道 2：同源 Pages（要等 Pages 构建，约 40~60 秒）
+      return fetchWithTimeout("premium.json?_=" + Date.now(), {cache:"no-store"}, 8000)
+        .then(function(r){
+          if(!r.ok) throw new Error("pages " + r.status);
+          return r.json().then(function(d){ if(d && d.items) return {d:d, via:"Pages"}; throw new Error("pages bad"); });
+        });
+    });
+}
+function staleReload(remoteT){
+  // 侧车已是更新交易日，说明本页 HTML 是旧的（晚间没重建或缓存）→ 带时间戳重载一次
+  try{
+    var k = "wb_auction_stale_" + remoteT;
+    if(sessionStorage.getItem(k)) return;
+    sessionStorage.setItem(k, "1");
+    location.replace(location.pathname + "?_wb=" + remoteT);
+  }catch(e){}
+}
+function tryMerge(res){
+  if(!res || !res.d || !res.d.items) return false;
+  var d = res.d;
+  if(String(d.t||"") !== String(EMBED.t||"")){
+    if(String(d.t||"") > String(EMBED.t||"")) staleReload(String(d.t));
+    return false;
+  }
+  var n = 0;
+  GROUPS.forEach(function(g){
+    g.items.forEach(function(it){
+      var rec = d.items[it.code];
+      if(rec && rec.premium != null){ it.premium = rec.premium; n++; }
+    });
+  });
+  var tm = new Date();
+  merged = {at: ("0"+tm.getHours()).slice(-2) + ":" + ("0"+tm.getMinutes()).slice(-2) + ":" + ("0"+tm.getSeconds()).slice(-2),
+            via: res.via, n: n};
+  return true;
+}
+function poll(){
+  if(merged) return;
+  tries++;
+  fetchPremium().then(function(res){
+    if(tryMerge(res)){ render(); setStatus(); return; }
+    schedule();
+  }, function(){ schedule(); });
+  setStatus();
+}
+function schedule(){
+  if(merged) return;
+  // 只在 T+1 当天 09:31:30 前密集轮询；其余时间（盘后打开）再懒试几次就够
+  var isT1 = (today8() === String(EMBED.t1||""));
+  var hm = hmNow();
+  var deadline = isT1 ? 93130 : 235959;
+  var maxTries = isT1 ? 80 : 6;      // 09:25~09:31 约 5s 一次；盘后最多 6 次
+  if(hm <= deadline && tries < maxTries) setTimeout(poll, 5000);
+  else setStatus('溢价拉取未完成 <span class="pill pill-bad">通道异常</span>，显示内嵌数据');
+}
+
+document.addEventListener("click", function(ev){
+  var b = ev.target;
+  if(b && b.classList && b.classList.contains("sortbtn")){
+    var g = b.getAttribute("data-g"), m = b.getAttribute("data-m");
+    sortMode[g] = (sortMode[g] === m) ? "role" : m;
+    render();
+  }
+});
+document.addEventListener("visibilitychange", function(){
+  if(!document.hidden && !merged) poll();
+});
+
+render();
+setStatus();
+poll();
+})();
+</script>
+</body>
+</html>
