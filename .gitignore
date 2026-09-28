@@ -15,3 +15,7 @@ make_pro_template.py
 # 在站点根目录可被公开下载），已 git rm --cached 并在此封堵。
 _backup_*
 _tmp_*
+
+# 一次性诊断/校验脚本：只在本机跑，不进 Pages 仓库（2026-09-28 清理）
+_diag*.py
+_verify*.py
