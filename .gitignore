@@ -5,3 +5,4 @@ __pycache__/
 .git_archival.txt
 v2_template.html
 build_v2.py
+auction_template.html
