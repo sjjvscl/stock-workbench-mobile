@@ -10,3 +10,8 @@ pro_template.html
 make_pro_template.py
 *.bak_before_*
 *.bak_*
+# 安全备份与临时文件：只留在本地做回滚用，绝不进 Pages 仓库。
+# 2026-09-28 发现 17 个历史备份被跟踪（含 18.5MB 的 full.html.bak_*，
+# 在站点根目录可被公开下载），已 git rm --cached 并在此封堵。
+_backup_*
+_tmp_*
