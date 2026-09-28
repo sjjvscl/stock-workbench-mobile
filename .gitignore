@@ -6,3 +6,7 @@ __pycache__/
 v2_template.html
 build_v2.py
 auction_template.html
+pro_template.html
+make_pro_template.py
+*.bak_before_*
+*.bak_*
