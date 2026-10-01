@@ -48,6 +48,18 @@
   .b-green{background:var(--greenbg);color:var(--green)}
   .b-amber{background:var(--amberbg);color:var(--amber)}
   .b-blue{background:var(--bluebg);color:var(--blue)}
+  /* ===== 竞价页入口（2026-10-01 加） =====
+     auction.html（开盘啦口径）/ auction_ths.html（同花顺口径）是与工作台并列的独立页面，
+     此前两边**都没有互链**：线上只能靠手输 URL 走过去。
+     ⚠ 不能放进 .quick-nav / .bottom-nav：PRO 的 buildNav()（make_pro_template.py）会把这两个
+       容器的 innerHTML **整段重写**成按模式生成的锚点列表，加进去在 PRO 上会被静默抹掉。
+       .topbar 是两版都不重写的地方（PRO 只在它前面插入 .mode-bar），所以放这里。
+     target="_blank" 是为了保住工作台当前的复盘日期与滚动位置 —— 用户的原始诉求正是「别丢位置」。 */
+  .xlink{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:12.5px;
+    text-decoration:none;background:var(--bluebg);color:var(--blue);border:1px solid #c5d9f5;white-space:nowrap}
+  .xlink:hover{background:#dcebfb;border-color:#9dc4ee}
+  body.dark .xlink{border-color:rgba(106,168,238,.38)}
+  body.dark .xlink:hover{background:#243550}
   .b-gray{background:#eef0f3;color:var(--muted)}
   .big{font-size:26px;font-weight:800;line-height:1.15}
   .stat{display:flex;flex-direction:column;gap:2px;padding:8px 11px;background:#fafbfd;border:1px solid var(--border);border-radius:10px}
@@ -567,6 +579,8 @@
       <div class="sub" id="buildInfo" style="font-size:10px;color:#9aa6b2;margin-top:2px"></div>
     </div>
     <div class="row">
+      <a class="xlink" href="auction.html" target="_blank" rel="noopener" title="竞价题材角色 · 开盘啦口径">竞价 · 开盘啦</a>
+      <a class="xlink" href="auction_ths.html" target="_blank" rel="noopener" title="竞价题材角色 · 同花顺口径">竞价 · 同花顺</a>
       <span class="badge b-gray" id="stageBadge">周期判定中…</span>
       <span class="badge b-gray" id="actionBadge">—</span>
     </div>
