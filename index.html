@@ -12,9 +12,13 @@
     --purple:#5b4bb8; --purplebg:#efecfb;
     --shadow:0 1px 3px rgba(20,30,50,.07),0 1px 2px rgba(20,30,50,.05);
     --radius:12px;
-    /* 吸顶三级的高度：纪律条(--rbH) / 日期条(--dbH) / 快捷导航。默认值只是首帧兜底，
-       真实高度由 layoutSticky() 在 load / resize / 内容变化后写入，避免写死数值失效。 */
-    --rbH:52px; --dbH:44px; --stickH:146px;
+    /* 吸顶各级的高度：纪律条(--rbH) / 模式条(--mbH) / 日期条(--dbH) / 快捷导航。默认值只是首帧兜底，
+       真实高度由 layoutSticky() 在 load / resize / 内容变化后写入，避免写死数值失效。
+       ⚠ --mbH 是 2026-10-01 加的「可插层」：V2 没有模式条，它恒为 0，所有 calc 退化成原来的两段式；
+         PRO 由 make_pro_template.py 插入 .mode-bar，layoutSticky 量到多少就叠多高。
+         加这一层的起因：PRO 把 .mode-bar 写成 top:0 / 窄屏 top:46px 的死值，
+         与纪律条、日期条三层互相压住——桌面下模式条被完全遮死、窄屏下日期条压住快捷导航点不动。 */
+    --rbH:52px; --mbH:0px; --dbH:44px; --stickH:146px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
@@ -99,7 +103,7 @@
      .row 一旦随 .topbar 滚出视口就一起走；给 .topbar 整体吸顶又要常驻约 80px。
      塞进 .quick-nav 也不行：那是 overflow-x:auto 的横向滚动行，末尾控件会被推出可见区。
      所以单列一层紧凑的日期条，DOM 紧跟 .topbar，吸顶偏移由 --rbH 动态给出。 */
-  .date-bar{position:sticky;top:var(--rbH);z-index:51;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  .date-bar{position:sticky;top:calc(var(--rbH) + var(--mbH));z-index:51;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
     background:var(--bg);padding:7px 0 8px;margin:0}
   .date-bar .db-lb{font-size:12px;font-weight:700;color:#4a5563;white-space:nowrap}
   .date-bar .db-nav{flex:0 0 auto;width:28px;height:28px;border:1px solid var(--border);background:#fff;border-radius:8px;
@@ -110,8 +114,8 @@
   .date-bar select#dateSel{font-size:13.5px;font-weight:700;padding:5px 9px;border:1px solid #c9d3df;border-radius:8px;
     background:#fff;cursor:pointer;color:var(--text);max-width:min(62vw,340px)}
   .date-bar .db-hint{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}
-  /* ===== 快捷导航（常驻吸顶第 3 层） ===== */
-  .quick-nav{position:sticky;top:calc(var(--rbH) + var(--dbH));z-index:50;display:flex;gap:6px;overflow-x:auto;padding:6px 0 8px;margin-bottom:6px;background:rgba(238,241,246,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  /* ===== 快捷导航（常驻吸顶最后一层） ===== */
+  .quick-nav{position:sticky;top:calc(var(--rbH) + var(--mbH) + var(--dbH));z-index:50;display:flex;gap:6px;overflow-x:auto;padding:6px 0 8px;margin-bottom:6px;background:rgba(238,241,246,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
   .quick-nav a{flex:0 0 auto;text-decoration:none;font-size:12px;font-weight:600;color:var(--text);background:#fff;border:1px solid var(--border);border-radius:999px;padding:6px 13px;box-shadow:var(--shadow)}
   .quick-nav a:hover,.quick-nav a:active{background:var(--bluebg);color:var(--blue);border-color:#bcd6ef}
   /* ===== 决策头版 ===== */
@@ -318,7 +322,7 @@
   @media(max-width:720px){
     body{padding:10px 10px 76px}
     .topbar h1{font-size:15px}
-    .quick-nav{top:calc(var(--rbH) + var(--dbH));padding:6px 0}
+    .quick-nav{top:calc(var(--rbH) + var(--mbH) + var(--dbH));padding:6px 0}
     .date-bar{gap:6px;padding:6px 0 7px}
     .date-bar .db-hint{display:none}
     .date-bar select#dateSel{font-size:13px;font-weight:700;padding:4px 7px;max-width:min(52vw,220px)}
@@ -3128,15 +3132,21 @@ function fillInlineMinutes(){
 function layoutSticky(){
   const rs = document.documentElement.style;
   const rb = document.querySelector(".rule-bar");
+  const mb = document.querySelector(".mode-bar");      // PRO 才有；V2 量到 0
   const db = document.getElementById("dateBar");
   const qn = document.querySelector(".quick-nav");
   const hr = rb ? Math.round(rb.getBoundingClientRect().height) : 0;
+  const hm = mb ? Math.round(mb.getBoundingClientRect().height) : 0;
   const hd = db ? Math.round(db.getBoundingClientRect().height) : 0;
   const hq = qn ? Math.round(qn.getBoundingClientRect().height) : 0;
   if(hr > 0) rs.setProperty("--rbH", hr + "px");
+  /* ⚠ 模式条只有 PRO 有。没有它时必须把 --mbH 显式写回 0px：
+     否则「先开过 PRO 页、再开 V2 页」在同一浏览器里不会串，但页面内做过模式切换
+     （PRO 的盘前/复盘会改变条内容、进而改变高度）时，残留的旧高度会让日期条悬空。 */
+  rs.setProperty("--mbH", (hm > 0 ? hm : 0) + "px");
   if(hd > 0) rs.setProperty("--dbH", hd + "px");
-  /* 锚点偏移要盖住整叠吸顶条（纪律条 + 日期条 + 快捷导航），再加一点呼吸空间 */
-  rs.setProperty("--stickH", (hr + hd + hq + 10) + "px");
+  /* 锚点偏移要盖住整叠吸顶条（纪律条 + 模式条 + 日期条 + 快捷导航），再加一点呼吸空间 */
+  rs.setProperty("--stickH", (hr + hm + hd + hq + 10) + "px");
   updateDateBtns();
 }
 /* 惰性解析 / 联网兜底期间整条日期控件一起锁。用标志位而不是直接改 DOM，
