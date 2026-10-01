@@ -3955,10 +3955,33 @@ renderAll(); initDateSel();
     if(sel.value!==o.value){ sel.value=o.value; }
   }
 
+  /* ── 浮层切换时保留滚动位置 ────────────────────────────────────────
+     applyDate() 结尾固定执行 window.scrollTo({top:0,behavior:"smooth"})。
+     这里挂一个惰性拦截：只有 keepY 非空（即本次切换由浮层发起）时才把
+     「回顶」换成「回原位」，其余任何滚动一律原样放行。
+     用户一旦自己滚动，keepY 立即失效，绝不再干预用户。 */
+  var realScrollTo = window.scrollTo.bind(window);
+  var keepY = null, switchAt = 0;
+  window.scrollTo = function(a, b){
+    var isTop = (a && typeof a === 'object')
+      ? (a.top === 0)
+      : ((a === 0 || a === undefined) && b === 0);
+    if(keepY !== null && isTop){
+      var y=keepY; keepY=null;
+      realScrollTo(0, y);
+      return;
+    }
+    return realScrollTo.apply(window, arguments);
+  };
+
   sel.addEventListener('change',function(){
     var o=origEl(); if(!o) return;
     var v=sel.value;
     o.value=v;
+    keepY = window.scrollY||window.pageYOffset||0;
+    switchAt = Date.now();
+    // 异步路径（loadDateFetch → then）可能晚些才进 applyDate，留个上限兜底
+    setTimeout(function(){ keepY=null; },6000);
     if(typeof loadDate==='function'){ loadDate(v); }
     else if(typeof o.onchange==='function'){ o.onchange.call(o,v); }
   });
@@ -3967,6 +3990,8 @@ renderAll(); initDateSel();
   function upd(){
     var o=origEl();
     var y=window.scrollY||window.pageYOffset||0;
+    // 用户自己滚了就放弃保留。250ms 内的事件是重渲染引起的，不算数。
+    if(keepY!==null && Date.now()-switchAt>250 && Math.abs(y-keepY)>8){ keepY=null; }
     // 原始选择器被吸顶的 .rule-bar(50) + .quick-nav(45) 遮住后就浮出
     var need = o ? (o.getBoundingClientRect().bottom<96) : (y>340);
     if(need===shown) return;
