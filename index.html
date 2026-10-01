@@ -999,7 +999,9 @@ function deriveDecision(cycle, market){
 }
 function marketTemp(m){
   m = m || {};
-  const zha = m.zha_rate;
+  /* ⚠ 用 openRate(m) 而不是 m.zha_rate：下面 0.43 是新口径阈值，
+     拿旧口径的 0.384 去比会判出「情绪强势」而真实开板比例是 62.3%。见 openRate() 的注释。 */
+  const zha = openRate(m);
   /* 比值走 zdRatio()：跌停未采集 → null（说「未定」）；跌停真实为 0 → Infinity。
      ⚠ 不能反手把「未知」读成「🧊 情绪转弱」——那是另一个方向的伪造。缺数据就说未定。 */
   const zt = zdRatio(m);
@@ -1096,6 +1098,33 @@ function zdCls(m){
   if(r == null) return "";
   return r >= 10 ? "zt" : r >= 5 ? "warn" : "dt";
 }
+/* 开板比例，**口径归一**（2026-10-01 加）。
+ *
+ * `market.zha_rate` 这个名字在归档里横跨两套口径，前端以前当成一套读：
+ *   2026-09-24 及以前：旧口径 `zha/(zt+zha)`，数学上限锁死 50%
+ *   2026-09-28 起：    新口径 `zha/zt`（真开板比例），并另发 `open_rate`
+ * 12 天选择器里 —— 9 天是旧口径、3 天是新口径、**同页混着**。
+ *
+ * 怎么证实的（不靠眼看）：`zha_rate` 只存 4 位小数，反解「开板只数」看哪个口径能解出整数。
+ *   旧口径反解 zha = r·zt/(1-r)，新口径反解 zha = r·zt。
+ *   9/14~9/24 九天：旧式残差 ≤0.005、新式残差 0.11~0.49（差 30~460 倍）→ 旧口径。
+ *   9/28~9/30 三天：新式残差 ≤0.002、旧式残差 0.11~0.24 → 新口径。
+ *   结构性铁证：9/28 的 0.6364 > 0.5，而旧口径被 `zha/(zt+zha)` 锁死在 50% 以下，出不来。
+ *
+ * 不归一的话错在哪：9/18 旧值 0.384 被当成 38.4% 显示（真开板比例 62.3%），
+ * 而 marketTemp 的阈值 0.43 是新尺度的 —— 0.384 < 0.43 判「🔥 情绪强势」，
+ * 真实开板比例 62.3% 远超 43%，该判中性。**不是数字小一点，是结论反了。**
+ *
+ * 换算关系（旧 = p/(1+p) 的逆）：p = old/(1-old)。9 天全部套用。
+ * 优先 `open_rate`（新口径自带，最准），没有再换算旧值。 */
+function openRate(m){
+  m = m || {};
+  if(m.open_rate != null) return m.open_rate;
+  const old = m.zha_rate;
+  if(old == null) return null;
+  if(!(old >= 0) || old >= 1) return null;   // 旧口径上限 50%，≥1 属异常值，不猜
+  return old / (1 - old);
+}
 function renderMarket(){
   const m = DATA.market||{};
   const dtOk = dtKnown(m);
@@ -1104,7 +1133,7 @@ function renderMarket(){
     {k:"跌停",v:dtText(m),cls:dtOk?"dt":""},
     {k:"涨停/跌停",v:zdText(m),cls:zdCls(m)},
     {k:"最高板",v:m.max_lbc,cls:"lbc"},
-    {k:"开板比例",v:(m.zha_rate!=null?fmt(m.zha_rate*100,0)+"%":"—"),cls:m.zha_rate>=0.43?"warn":""},
+    {k:"开板比例",v:(openRate(m)!=null?fmt(openRate(m)*100,0)+"%":"—"),cls:openRate(m)>=0.43?"warn":""},
     {k:"封板率",v:(m.zt_rate!=null?fmt(m.zt_rate*100,0)+"%":"—")},
     {k:"晋级率",v:(m.promote_rate!=null?fmt(m.promote_rate*100,0)+"%":"—")},
     {k:"成交额(亿)",v:m.amount},
@@ -1192,7 +1221,7 @@ function renderScan(){
     {k:"涨停", v:m.limit_up, cls:"zt"},
     {k:"最高板", v:m.max_lbc, cls:"lbc"},
     {k:"晋级率", v:m.promote_rate!=null ? fmt(m.promote_rate*100,0)+"%" : "—", cls:m.promote_rate>=0.25?"zt":m.promote_rate>=0.15?"warn":"dt"},
-    {k:"开板比例", v:m.zha_rate!=null ? fmt(m.zha_rate*100,0)+"%" : "—", cls:m.zha_rate>=0.43?"warn":""},
+    {k:"开板比例", v:openRate(m)!=null ? fmt(openRate(m)*100,0)+"%" : "—", cls:openRate(m)>=0.43?"warn":""},
     {k:"封板率", v:m.zt_rate!=null ? fmt(m.zt_rate*100,0)+"%" : "—"},
     {k:"跌停", v:dtText(m), cls:dtKnown(m)?"dt":""}
   ];
@@ -3847,14 +3876,14 @@ function renderBattle(){
     </div>
 
     <div style="font-weight:800;font-size:14px;margin:14px 0 0">开盘 5 问 <span class="muted" style="font-size:12px;font-weight:400">盘前必须逐条答完，答不上就不出手</span></div>
-    ${qbox("Q1","今天是赚钱还是亏钱行情，预期修复还是继续退？",`<b>${money}</b>。涨 ${m.up??"—"} / 跌 ${m.down??"—"}，涨停 ${ztN} / 跌停 ${dtText(m)}${dtGap?"（"+dtGap+"）":""}，晋级率 ${pc(promote)}，炸板率 ${pc(m.zha_rate)}。`,false)}
+    ${qbox("Q1","今天是赚钱还是亏钱行情，预期修复还是继续退？",`<b>${money}</b>。涨 ${m.up??"—"} / 跌 ${m.down??"—"}，涨停 ${ztN} / 跌停 ${dtText(m)}${dtGap?"（"+dtGap+"）":""}，晋级率 ${pc(promote)}，开板比例 ${pc(openRate(m))}。`,false)}
     ${qbox("Q2","主线板块整体开得强不强？", mainTxt + "。", false)}
     ${qbox("Q3","最高标竞价是高开还是低开，有没有核深水？",`最高标 <b>${topName}（${topLbc} 板）</b>，${top.board||"—"}${top.open_times?`，炸板 ${top.open_times} 次`:""}。高开大于 +3% 情绪未崩；平开至 +3% 中性；低开或跌停就全天只守不攻。`,false)}
     ${qbox("Q4","今天允许的最大仓位是多少？",`<b>${cap}</b>（5W本金 → ${capMoney}），单票不超过 10%，先小仓试错，确认转强再加。`,false)}
     ${qbox("Q5","三类专属买点是否有标的触发观测条件？",`<b>A ${aOK?"有":"降级"}</b>：${aOK?topName+"（"+topLbc+" 板）":(aAlt.name?aAlt.name+"（空间板 "+topName+" 为缩量一字，不合格）":"前置不成立，暂停")}　｜　<b>B ${bTop.name?"有":"无"}</b>：${bTop.name?bTop.name+"（"+(bTop.days||bTop.lbc+" 板")+"断板）":"无合格标的"}　｜　<b>C ${cReady?"有":"无"}</b>：${cReady?"可挖掘补涨":"龙头未断板、无二波结构，暂停"}`,true)}
 
     ${stageBox("阶段一 · 盘前（头天晚上 / 开盘前）", [
-      li(`先看昨天市场：<b>${money}</b>`, `涨 ${m.up??"—"} / 跌 ${m.down??"—"} ｜ 涨停 ${ztN} / 跌停 ${dtText(m)}${dtGap?"（"+dtGap+"）":""} ｜ 晋级率 ${pc(promote)} ｜ 炸板率 ${pc(m.zha_rate)}`),
+      li(`先看昨天市场：<b>${money}</b>`, `涨 ${m.up??"—"} / 跌 ${m.down??"—"} ｜ 涨停 ${ztN} / 跌停 ${dtText(m)}${dtGap?"（"+dtGap+"）":""} ｜ 晋级率 ${pc(promote)} ｜ 开板比例 ${pc(openRate(m))}`),
       li(`找出当天主线板块，分清主线和蹭热度的杂毛`, mainTxt),
       li(`挑候选票：要接力的连板、想试反包的断板票`, `弱转强节点：${nodeTxt} ｜ 最高板：${topName}（${topLbc}板）`)
     ])}
