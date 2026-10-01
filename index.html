@@ -576,7 +576,7 @@
     <button class="db-nav" id="dbPrev" type="button" title="前一个交易日" onclick="stepDate(-1)">◀</button>
     <select id="dateSel" onchange="loadDate(this.value)" title="选择复盘日期"></select>
     <button class="db-nav" id="dbNext" type="button" title="后一个交易日" onclick="stepDate(1)">▶</button>
-    <span class="db-hint">吸顶常驻 · 滚到哪都能切</span>
+    <span class="db-hint" id="dbHint">吸顶常驻 · 滚到哪都能切</span>
   </div>
 
   <nav class="quick-nav" aria-label="快捷导航">
@@ -995,6 +995,16 @@ function renderMeta(){
   el("meta").textContent = `数据日期：${DATA.date||"—"} ｜ 模式：${DATA.mode||"—"} ｜ 次日 ${DATA.next_day||"—"}`;
   const bi = window.WB_BUILD || "";
   el("buildInfo").textContent = bi ? `数据构建于 ${bi}` : "";
+  /* 吸顶日期条上打一个构建时间戳（2026-10-01 加）。
+     为什么打在**吸顶条**上：这一条滚动时永远在视口里，而 #buildInfo 在标题下面、一滚就没了。
+     起因：用户反馈「日期选择栏还是没有跟着固定」，排查下来磁盘产物与线上(index.html)都已
+     是吸顶版（15:31 起），他屏幕上却是 14:15 那版（右下角 #floatDate 白胶囊）。
+     页面的自动刷新兜底只在 http(s) 下生效、且取不到 Last-Modified 时静默放过，
+     所以「老标签页 / 强缓存」这条会反复出现，而肉眼分不出新旧版。
+     有了这个戳，截图一眼就能认出是哪次构建，不用再互相猜。
+     ⚠ 定位在老样式 .db-hint 上：它在 ≤720px 是 display:none，窄屏不会因此多折一行。 */
+  const dh = el("dbHint");
+  if(dh) dh.textContent = bi ? `吸顶常驻 · 构建 ${bi.slice(5)}` : "吸顶常驻 · 滚到哪都能切";
   const cyc = DATA.cycle||{};
   const stage = cyc.stage||"未知";
   el("stageBadge").textContent = stage;
