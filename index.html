@@ -100,8 +100,6 @@
   .date-bar .db-nav:disabled{opacity:.38;cursor:default;border-color:var(--border);color:#9aa6b2;background:#fff}
   .date-bar select#dateSel{font-size:13.5px;font-weight:700;padding:5px 9px;border:1px solid #c9d3df;border-radius:8px;
     background:#fff;cursor:pointer;color:var(--text);max-width:min(62vw,340px)}
-  .date-bar .db-cur{font-size:11.5px;color:var(--muted);white-space:nowrap}
-  .date-bar .db-cur b{color:var(--blue)}
   .date-bar .db-hint{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}
   /* ===== 快捷导航（常驻吸顶第 3 层） ===== */
   .quick-nav{position:sticky;top:calc(var(--rbH) + var(--dbH));z-index:50;display:flex;gap:6px;overflow-x:auto;padding:6px 0 8px;margin-bottom:6px;background:rgba(238,241,246,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
@@ -561,13 +559,14 @@
     </div>
   </div>
 
-  <!-- 吸顶日期条：滚到页面任何位置都能直接切复盘日期，不必先滚回顶部 -->
+  <!-- 吸顶日期条：滚到页面任何位置都能直接切复盘日期，不必先滚回顶部。
+       不放「当前 XXXX-XX-XX」这类冗余文字：下拉本身就是当前值的显示，
+       多一个 span 会让窄屏（实测 390px 级）多折一行，把整条撑到 80px 高。 -->
   <div class="date-bar" id="dateBar">
     <span class="db-lb">📅 复盘日期</span>
     <button class="db-nav" id="dbPrev" type="button" title="前一个交易日" onclick="stepDate(-1)">◀</button>
     <select id="dateSel" onchange="loadDate(this.value)" title="选择复盘日期"></select>
     <button class="db-nav" id="dbNext" type="button" title="后一个交易日" onclick="stepDate(1)">▶</button>
-    <span class="db-cur" id="dbCur"></span>
     <span class="db-hint">吸顶常驻 · 滚到哪都能切</span>
   </div>
 
@@ -3128,11 +3127,6 @@ function updateDateBtns(){
   const p = el("dbPrev"), n = el("dbNext"), sel = el("dateSel");
   if(!p || !n || !sel || !DATES || !DATES.length) return;
   const i = DATES.findIndex(d=>d.file===sel.value);
-  const cur = el("dbCur");
-  if(cur){
-    const d = i >= 0 ? DATES[i] : null;
-    cur.innerHTML = d ? "当前 <b>" + (d.date || "") + "</b>" : "";
-  }
   /* DATES 是倒序（新 → 旧）：下标越大越早 */
   p.disabled = dateBusy || i < 0 || i >= DATES.length - 1;   // ◀ 更早
   n.disabled = dateBusy || i <= 0;                           // ▶ 更晚
