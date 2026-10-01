@@ -21,11 +21,147 @@
   python stock_workbench.py input.json [输出路径]
   python stock_workbench.py            # 默认读同目录 input.json -> workbench.html + workbench_latest.html
 """
-import json, sys, os, re
+import json, sys, os, re, shutil, time
 from collections import Counter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TPL = os.path.join(HERE, "workbench_template.html")
+
+# ===== 数据保险（2026-09-22 加）=====
+# data_<date>.json 是**无条件覆盖写**的：一旦某轮抓数退化（涨停池只回一半、K线全空、
+# 涨跌家数被 fetch_ths_history 清空），好版本会被坏版本顶掉且不留任何痕迹。
+# 这是本项目「丢数据」的真实入口（2026-09-22 成交额为空事件就是这条路径）。
+# 三道保险：
+#   ① first.json  当日首版，只写一次，永久留档
+#   ② latest.json 每次覆盖后的最新版
+#   ③ best.json   当日**质量分最高**的版本 —— 坏数据可以覆盖 data_*.json，
+#                 但顶不掉 best.json，随时可一键回滚
+# 只增不删，任何一步失败都不阻断主链路。
+SNAPSHOT_DIR = os.path.join(HERE, "_data_snapshot")
+
+
+def data_quality_score(data):
+    """给一份 DATA 打质量分。用于判断「新版本是否劣于已有版本」。
+
+    2026-09-22 修正：初版把涨停池条数封顶在 40、齐全票数封顶在 20，结果满分恒定 66，
+    「62 只」与「63 只」同分，退化检测形同虚设。现改为**不封顶的细粒度加权**，
+    让任何一只票的增减都能在分数上体现，同时保持「关键字段 > 涨停池 > 单票字段」的
+    权重次序 —— 丢一个关键字段（weight 100）比丢 20 只票（weight 5）严重得多，
+    这与「9/22 成交额为空」比「少两只票」更致命的实际体感一致。
+
+    口径刻意不依赖任何外部字典与网络，保证任何环境下可复算。
+    """
+    return data_quality_detail(data)["total"]
+
+
+def data_quality_detail(data):
+    """质量分的可解释拆解，用于打印告警时说明「差在哪」。"""
+    key = 0
+    m = data.get("market") or {}
+    for k in ("up", "down", "amount", "limit_up", "limit_down", "max_lbc"):
+        v = m.get(k)
+        if v is not None and v != "":
+            key += 1
+    tt = data.get("tianti") or []
+    full = 0
+    for t in tt:
+        if (t.get("amount") or 0) > 0 and (t.get("fengdan") or 0) > 0:
+            full += 1
+    th = data.get("themes") or []
+    return {
+        "key": key, "key_pts": key * 100,
+        "n_tianti": len(tt), "tianti_pts": len(tt) * 5,
+        "n_full": full, "full_pts": full * 3,
+        "n_themes": len(th), "themes_pts": len(th) * 2,
+        "total": key * 100 + len(tt) * 5 + full * 3 + len(th) * 2,
+    }
+
+
+def _qdesc(score_or_data):
+    try:
+        d = data_quality_detail(score_or_data) if isinstance(score_or_data, dict) else None
+        if d:
+            return (f"{d['total']}（关键字段 {d['key']}/6, 涨停池 {d['n_tianti']} 只, "
+                    f"字段齐全 {d['n_full']} 只, 题材 {d['n_themes']} 组）")
+    except Exception:
+        pass
+    return str(score_or_data)
+
+
+def snapshot_before(date8, data_file):
+    """写盘前：旧版本留档。
+    首次生成该日数据时留 first.json；同时只要旧版质量分更高，就把旧版刷成 best.json。
+    """
+    d = os.path.join(SNAPSHOT_DIR, date8)
+    try:
+        os.makedirs(d, exist_ok=True)
+        if not os.path.exists(data_file):
+            return d
+        first = os.path.join(d, "first.json")
+        if not os.path.exists(first):
+            shutil.copy2(data_file, first)
+            print(f"     [保险] 当日首版已留档 _data_snapshot/{date8}/first.json")
+        # 择优：旧版分高于已存的 best，才覆盖 best
+        try:
+            old = json.load(open(data_file, encoding="utf-8"))
+            old_s = data_quality_score(old)
+            best = os.path.join(d, "best.json")
+            best_s = -1
+            if os.path.exists(best):
+                try:
+                    best_s = data_quality_score(json.load(open(best, encoding="utf-8")))
+                except Exception:
+                    best_s = -1
+            if old_s > best_s:
+                shutil.copy2(data_file, best)
+                print(f"     [保险] 旧版质量分 {old_s} > 已存 best {best_s}，已更新 best.json"
+                      f" —— {_qdesc(old)}")
+        except Exception as e:
+            print(f"     [保险] 择优留档跳过: {e}")
+        return d
+    except Exception as e:
+        print(f"     [保险] 留档失败(不阻断): {e}")
+        return None
+
+
+def snapshot_after(d, data_file):
+    """写盘后：留最新版，并在新版本质量分低于 best 时**醒目告警**（不阻断）。"""
+    try:
+        if not d:
+            return
+        latest = os.path.join(d, "latest.json")
+        shutil.copy2(data_file, latest)
+        tag = os.path.basename(d)
+        try:
+            new_data = json.load(open(data_file, encoding="utf-8"))
+            new_s = data_quality_score(new_data)
+        except Exception:
+            new_data, new_s = None, -1
+        best = os.path.join(d, "best.json")
+        if os.path.exists(best):
+            try:
+                best_s = data_quality_score(json.load(open(best, encoding="utf-8")))
+            except Exception:
+                best_s = -1
+            if new_s < best_s:
+                print(f"     [保险][告警] 新版本质量分 {new_s} 低于当日最佳 {best_s}！")
+                print(f"                  新版: {_qdesc(new_data) if new_data else '无法解析'}")
+                print(f"                  最佳: {_qdesc(json.load(open(best, encoding='utf-8')))}")
+                print(f"                  好版本已保住 _data_snapshot/{tag}/best.json，"
+                      f"回滚执行: python restore_data.py {tag}")
+            else:
+                shutil.copy2(data_file, best)
+                print(f"     [保险] 质量分 {new_s}（>= best {best_s}），已更新 best.json")
+        else:
+            shutil.copy2(data_file, best)
+            print(f"     [保险] 首次建立当日最佳版本 best.json（质量分 {new_s}）")
+        first = os.path.join(d, "first.json")
+        if os.path.exists(first) and os.path.getsize(first) != os.path.getsize(latest):
+            print(f"     [保险] 当日数据被覆盖过（首版 {os.path.getsize(first)}B "
+                  f"→ 最新 {os.path.getsize(latest)}B），三份快照均在 _data_snapshot/{tag}/")
+    except Exception as e:
+        print(f"     [保险] 失败(不阻断): {e}")
+
 
 # 主线题材关键词（用于节点票/弱转强识别）
 MAIN_THEMES = {
@@ -42,13 +178,142 @@ NOISE = {
 # ───────────────────────── 次日竞价溢价(T+1) ─────────────────────────
 from datetime import date as _dt, timedelta as _td
 
+# ===== 交易日历（2026-09-25 加）=====
+# 背景：next_trading_day() 原实现只跳周末，遇法定节假日会算错。
+# 2026-09-24（周四，中秋前最后交易日）原实现返回 9/25，而 9/25 至 9/27 休市，
+# 正确值是 9/28。这个错误会让 load_auction() 去找永不存在的 auction_20260925.json，
+# 节后真实竞价数据存成 auction_20260928.json 却匹配不上，
+# 9/24 的 T+1 竞价溢价被静默丢弃（不报错、不留痕）。
+#
+# 数据源：深交所官方交易日历（含未来日期，是少数能查「未来交易日」的公开源）
+#   https://www.szse.cn/api/report/exchange/onepersistenthour/monthList?month=YYYY-MM
+#   返回 {"data":[{"jyrq":"2026-09-24","jybz":"1"}, ...]}，jybz=1 为交易日
+# 缓存：按月落盘 _trade_cal/YYYY-MM.json，当月只拉一次，之后纯本地读。
+# 兜底：网络不可用时退回「跳过周末」，与修复前行为完全一致，不会比原来更差。
+TRADE_CAL_DIR = os.path.join(HERE, "_trade_cal")
+TRADE_CAL_STATIC = os.path.join(HERE, "_trade_cal_static.json")
+TRADE_CAL_URL = ("https://www.szse.cn/api/report/exchange/onepersistenthour/"
+                 "monthList?month=%s")
+_TRADE_CAL_MEM = {}
+_TRADE_CAL_STATIC_MEM = None
+
+
+def _static_cal():
+    """全年日历快照 _trade_cal_static.json（一次拉全年，离线兜底，零网络）。
+
+    存在的意义：云端（GitHub Actions 跑在海外）访问深交所可能不通，
+    没有这份快照就会退回「跳过周末」，节假日 bug 在云端继续存在。
+    重新生成：把 2026-01 至次年 12 月逐月拉一遍覆盖即可
+    （见 _trade_cal_static.json 的 fetched 字段）。
+    """
+    global _TRADE_CAL_STATIC_MEM
+    if _TRADE_CAL_STATIC_MEM is None:
+        _TRADE_CAL_STATIC_MEM = {}
+        try:
+            with open(TRADE_CAL_STATIC, encoding="utf-8") as f:
+                _TRADE_CAL_STATIC_MEM = (json.load(f) or {}).get("months") or {}
+        except Exception:
+            _TRADE_CAL_STATIC_MEM = {}
+    return _TRADE_CAL_STATIC_MEM
+
+
+def trade_cal_month(ym):
+    """返回该月交易日集合 {'YYYY-MM-DD'}；不可用时返回 None。
+
+    优先级：内存 -> 全年静态快照（零网络）-> 月度缓存 -> 深交所接口。
+    返回 None 表示该月日历不可用，调用方退回「跳过周末」。
+    """
+    if ym in _TRADE_CAL_MEM:
+        return _TRADE_CAL_MEM[ym]
+    st = _static_cal()
+    if isinstance(st.get(ym), list) and st[ym]:
+        _TRADE_CAL_MEM[ym] = set(st[ym])
+        return _TRADE_CAL_MEM[ym]
+    path = os.path.join(TRADE_CAL_DIR, ym + ".json")
+    if os.path.exists(path):
+        try:
+            with open(path, encoding="utf-8") as f:
+                days = (json.load(f) or {}).get("days")
+            if isinstance(days, list) and days:
+                _TRADE_CAL_MEM[ym] = set(days)
+                return _TRADE_CAL_MEM[ym]
+        except Exception:
+            pass
+    try:
+        import urllib.request as _ur
+        import ssl as _ssl
+        ctx = _ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = _ssl.CERT_NONE
+        req = _ur.Request(TRADE_CAL_URL % ym,
+                          headers={"User-Agent": "Mozilla/5.0",
+                                   "Referer": "https://www.szse.cn/"})
+        raw = _ur.urlopen(req, timeout=15, context=ctx).read().decode("utf-8", "ignore")
+        days = [x["jyrq"] for x in (json.loads(raw).get("data") or [])
+                if str(x.get("jybz")) == "1"]
+        if not days:
+            return None
+        os.makedirs(TRADE_CAL_DIR, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"month": ym, "src": "szse", "days": days}, f,
+                      ensure_ascii=False, indent=1)
+        _TRADE_CAL_MEM[ym] = set(days)
+        return _TRADE_CAL_MEM[ym]
+    except Exception as e:
+        print(f"     [交易日历] {ym} 获取失败({type(e).__name__})，该月退回跳周末")
+        return None
+
+
 def next_trading_day(date_str):
-    """'YYYY-MM-DD' -> 下一个交易日(跳过周末)。用于定位 T+1 竞价数据。"""
-    d = _dt.fromisoformat(str(date_str)[:10])
-    while True:
+    """下一个交易日。接受 'YYYY-MM-DD' 或 'YYYYMMDD'，返回与输入同格式。
+
+    优先查深交所日历，可识别法定节假日（中秋/国庆等）；
+    日历不可用时退回「跳过周末」，保持与修复前一致的兜底行为。
+    """
+    s = str(date_str).strip()
+    compact = "-" not in s
+    d = (_dt(int(s[:4]), int(s[4:6]), int(s[6:8])) if compact
+         else _dt.fromisoformat(s[:10]))
+    for _ in range(30):              # 最多向后找 30 天，足够跨过任何长假
         d = d + _td(days=1)
-        if d.weekday() < 5:          # 0=周一 .. 4=周五
-            return d.isoformat()
+        cal = trade_cal_month(d.strftime("%Y-%m"))
+        if cal is None:
+            if d.weekday() < 5:      # 0=周一 .. 4=周五
+                break
+            continue
+        if d.isoformat() in cal:
+            break
+    return d.strftime("%Y%m%d") if compact else d.isoformat()
+
+
+def is_trading_day(date_str):
+    """该日是否为交易日。接受 'YYYY-MM-DD' 或 'YYYYMMDD'。
+
+    2026-09-25 加：修复前多处脚本用「非周末即交易日」当闸门，节假日
+    （中秋 9/25、国庆 10/1~10/7）会被误判为交易日，链路照跑并写入脏数据。
+    日历不可用时退回「非周末即交易日」，与修复前行为一致。
+    """
+    s = str(date_str).strip()
+    d = (_dt(int(s[:4]), int(s[4:6]), int(s[6:8])) if "-" not in s
+         else _dt.fromisoformat(s[:10]))
+    cal = trade_cal_month(d.strftime("%Y-%m"))
+    if cal is None:
+        return d.weekday() < 5
+    return d.isoformat() in cal
+
+
+def prev_trading_day(date_str):
+    """上一个交易日（不含自身）。接受两种格式，返回与输入同格式。"""
+    s = str(date_str).strip()
+    compact = "-" not in s
+    d = (_dt(int(s[:4]), int(s[4:6]), int(s[6:8])) if compact
+         else _dt.fromisoformat(s[:10]))
+    for _ in range(30):              # 最多向前找 30 天，足够跨过任何长假
+        d = d - _td(days=1)
+        if is_trading_day(d.isoformat()):
+            break
+    return d.strftime("%Y%m%d") if compact else d.isoformat()
+
 
 def load_auction(base_date, here):
     """载入 T+1 的竞价溢价数据(若存在)，返回 ({code:{open,premium,close_T}}, t1_date)。
@@ -231,6 +496,8 @@ def agg_themes(lu):
                 "next_premium": s.get("next_premium"),   # 小数 或 None
                 "has_k": bool(s.get("kline")),
                 "board_label": s.get("board_label"), "is_fanbao": s.get("is_fanbao"),
+                "lscap": s.get("lscap"),          # 流通市值(亿)：题材角色判中军用
+                "amount": s.get("amount"),        # 成交额(亿)：题材角色表展示用
             })
         pres = [s["next_premium"] for s in stock_list if s["next_premium"] is not None]
         avg_pre = round(sum(pres) / len(pres), 4) if pres else None
@@ -259,7 +526,7 @@ def judge(zt, dt, max_lbc, zha_rate, promote_rate, mo, up_ratio=None, low5=None,
         return {
             "stage": "④ 主跌期",
             "action": "空仓 / 极小仓试错",
-            "signal": (f"跌停{dt}只 vs 涨停{zt}只、炸板率{zha_pct}{bk}"
+            "signal": (f"跌停{dt}只 vs 涨停{zt}只、开板比例{zha_pct}{bk}"
                        f"——亏钱效应主导，接力补涨皆危险。"),
             "todo": ["切新题材一日游(仅前排)", "老题材连跌两天尾盘再博反弹",
                      "不抢盘中反弹", "单笔亏≥2%当日停手", "别乱试抖音新战法"],
@@ -269,7 +536,7 @@ def judge(zt, dt, max_lbc, zha_rate, promote_rate, mo, up_ratio=None, low5=None,
         return {
             "stage": "② 主升高潮期",
             "action": "可推仓至50%上限（高潮日谨防次日分化）",
-            "signal": (f"涨停{zt}只、最高{max_lbc}板、跌停{dt}只、晋级率{pr_pct}、炸板率{zha_pct}"
+            "signal": (f"涨停{zt}只、最高{max_lbc}板、跌停{dt}只、晋级率{pr_pct}、开板比例{zha_pct}"
                        f"——主线全面高潮，新周期主升确认。{('情绪:'+sent) if sent else ''}"),
             "todo": ["干真龙头(打板/竞价/隔日)", "五连板以上挖主线低位",
                      "不频繁切换、不丢龙头", "高潮次日谨防分化", "按仓位规则出手"],
@@ -279,7 +546,7 @@ def judge(zt, dt, max_lbc, zha_rate, promote_rate, mo, up_ratio=None, low5=None,
         return {
             "stage": "② 主升期(初中段)",
             "action": "可推仓至50%上限",
-            "signal": (f"涨停{zt}只、最高{max_lbc}板、跌停{dt}只、晋级率{pr_pct}、炸板率{zha_pct}"
+            "signal": (f"涨停{zt}只、最高{max_lbc}板、跌停{dt}只、晋级率{pr_pct}、开板比例{zha_pct}"
                        f"——新主线确认+赚钱效应外溢，模式内窗口开启。"),
             "todo": ["干真龙头(打板/竞价/隔日)", "五连板以上挖主线低位",
                      "不频繁切换、不丢龙头", "按仓位规则出手", "单笔亏≥2%当日停手"],
@@ -289,7 +556,7 @@ def judge(zt, dt, max_lbc, zha_rate, promote_rate, mo, up_ratio=None, low5=None,
         return {
             "stage": "③ 高位震荡期 / 退潮前兆",
             "action": "落袋控仓(≤30%)",
-            "signal": (f"涨停{zt}只、最高{max_lbc}板、跌停{dt}只、炸板率{zha_pct}——龙头已高、"
+            "signal": (f"涨停{zt}只、最高{max_lbc}板、跌停{dt}只、开板比例{zha_pct}——龙头已高、"
                        f"中位亏钱效应起，落袋为安，等低位补涨或切换。"),
             "todo": ["高位不重仓接力", "低位补涨(龙头不死前提下)", "不博穿越",
                      "控仓≤30%", "单笔亏≥2%当日停手"],
@@ -299,7 +566,7 @@ def judge(zt, dt, max_lbc, zha_rate, promote_rate, mo, up_ratio=None, low5=None,
         return {
             "stage": "② 局部主升(主线未全开)",
             "action": "可推仓至40%上限",
-            "signal": (f"涨停{zt}只、最高{max_lbc}板、跌停{dt}只、炸板率{zha_pct}——"
+            "signal": (f"涨停{zt}只、最高{max_lbc}板、跌停{dt}只、开板比例{zha_pct}——"
                        f"局部主线活跃但未普涨，赚钱效应集中在少数题材。"),
             "todo": ["聚焦已确认的主线核心", "打板/低吸均可", "中位跟风观望", "控仓≤40%"],
         }
@@ -308,7 +575,7 @@ def judge(zt, dt, max_lbc, zha_rate, promote_rate, mo, up_ratio=None, low5=None,
         return {
             "stage": "③ 高位震荡 / 确认中",
             "action": "控仓(≤30%)",
-            "signal": (f"涨停{zt}只、最高{max_lbc}板、跌停{dt}只、炸板率{zha_pct}、晋级率{pr_pct}"
+            "signal": (f"涨停{zt}只、最高{max_lbc}板、跌停{dt}只、开板比例{zha_pct}、晋级率{pr_pct}"
                        f"——方向未明，控仓试错，等周期确认。"),
             "todo": ["低位试错新题材", "不追高接力", "控仓≤30%", "等升阶硬条件再推仓"],
         }
@@ -316,7 +583,7 @@ def judge(zt, dt, max_lbc, zha_rate, promote_rate, mo, up_ratio=None, low5=None,
     return {
         "stage": "① 低位试错期",
         "action": "小仓试错(≤20%)",
-        "signal": (f"涨停仅{zt}只、最高{max_lbc}板、跌停{dt}只、炸板率{zha_pct}"
+        "signal": (f"涨停仅{zt}只、最高{max_lbc}板、跌停{dt}只、开板比例{zha_pct}"
                    f"——老题材冰点、新题材轮动。没有主线方向。"),
         "todo": ["打首板/切换新题材一日游", "低位补涨(老题材)",
                  "不追高、不接力高位", "小仓试错≤20%"],
@@ -413,6 +680,45 @@ def board_struct(daily, ratio, tk):
     return cur, prev
 
 
+# ───────────────────────── 题材角色：流通市值 ─────────────────────────
+def fetch_lscap(codes):
+    """腾讯行情批量取流通市值（亿）。题材角色判「中军」= 题材内市值最大者，缺此数据则中军为空。
+    单批 40 只、失败静默（不影响主链路）。"""
+    import urllib.request, ssl as _ssl
+    ctx = _ssl.create_default_context(); ctx.check_hostname = False; ctx.verify_mode = _ssl.CERT_NONE
+    ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/117.0 Safari/537.36"
+
+    def pfx(c):
+        c = str(c)
+        if c.startswith(("8", "4", "92")):
+            return "bj"
+        if c.startswith(("6", "9", "5")):
+            return "sh"
+        return "sz"
+
+    out = {}
+    codes = [str(c) for c in codes if c]
+    for i in range(0, len(codes), 40):
+        batch = codes[i:i + 40]
+        try:
+            url = "https://qt.gtimg.cn/q=" + ",".join(pfx(c) + c for c in batch)
+            req = urllib.request.Request(url, headers={"User-Agent": ua, "Referer": "https://gu.qq.com/"})
+            raw = urllib.request.urlopen(req, timeout=10, context=ctx).read().decode("gbk", "ignore")
+            for line in raw.split(";"):
+                if "~" not in line or '"' not in line:
+                    continue
+                p = line.split('"')[1].split("~")
+                if len(p) < 46:
+                    continue
+                try:
+                    out[p[2]] = float(p[44] or 0)      # [44] = 流通市值(亿)
+                except (ValueError, IndexError):
+                    pass
+        except Exception:
+            pass
+    return out
+
+
 # ───────────────────────── 主流程 ─────────────────────────
 def main():
     inp_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "input.json")
@@ -435,8 +741,22 @@ def main():
     up_ratio = (red / green) if green else 1.0
     low5 = fnum(updown.get("CNT_LOW5", 0)); high5 = fnum(updown.get("CNT_HIGH5", 0))
 
-    # 跌停数：优先 input.limit_down_count（东财兜底已注入），再回退 updown.CNT_REACH_DNLIMIT，最后东财实时跌停池兜底
-    dt = int(inp.get("limit_down_count") or fnum(updown.get("CNT_REACH_DNLIMIT", 0)))
+    # 跌停数：优先 input.limit_down_count（东财兜底已注入），再回退 updown.CNT_REACH_DNLIMIT，
+    # 最后东财实时跌停池兜底。
+    # ⚠ 2026-09-22 修语义混淆：原实现末尾写 `dt or None`，把「真实跌停数为 0」与
+    #   「接口没答上来」压成同一个值，导致 9/18、9/08 这两个**真实 0 跌停**的日子被
+    #   体检误报成「数据缺失」。现在用 dt_known 显式区分：
+    #   接口只要应答成功（哪怕跌停池是空的）就算已知，一律写真实数字。
+    # 只认「真有数值」的来源；input 里可能存在 limit_down_count: None 这种
+    # 「键在但值为空」的情况（抓取层写空值留下的），绝不能拿「键存在」当已知。
+    _inp_ld = inp.get("limit_down_count")
+    _ud_ld = fnum(updown.get("CNT_REACH_DNLIMIT", 0))
+    if _inp_ld not in (None, ""):
+        dt, dt_known = int(_inp_ld), True
+    elif _ud_ld:
+        dt, dt_known = int(_ud_ld), True
+    else:
+        dt, dt_known = 0, False
     if not dt:
         try:
             import urllib.request, ssl as _ssl
@@ -446,20 +766,39 @@ def main():
             _req = urllib.request.Request(_url, headers={"User-Agent":_UA, "Referer":"https://quote.eastmoney.com/"})
             _raw = urllib.request.urlopen(_req, timeout=15, context=_ctx).read()
             _d = json.loads(_raw.decode("utf-8", "ignore"))
-            _pool = (_d.get("data") or {}).get("pool") or []
-            if _pool:
-                dt = len(_pool)
-                inp["limit_down_count"] = dt
-                inp["limit_down_stocks"] = [{"code":p.get("c"), "name":p.get("n"), "pct":round((float(p.get("zdp") or 0))/100, 4)} for p in _pool[:20]]
-                print(f"[limit_down eastmoney fallback] {dt} stocks on {date}", file=sys.stderr)
+            _dd = _d.get("data") or {}
+            # tc 是接口给的权威跌停只数，0 也是有效答案；此接口的 date= 参数经 2026-09-22
+            # 逐一核验（9/07~9/22 共 11 天）确认按日返回，可用于历史回补。
+            if "tc" in _dd:
+                dt = int(_dd.get("tc") or 0)
+                dt_known = True
+                _pool = _dd.get("pool") or []
+                if dt:
+                    inp["limit_down_count"] = dt
+                    inp["limit_down_stocks"] = [{"code":p.get("c"), "name":p.get("n"), "zdp":float(p.get("zdp") or 0), "fund":None} for p in _pool[:20]]
+                print(f"[limit_down eastmoney] tc={dt} on {date}", file=sys.stderr)
         except Exception as e:
             print(f"[limit_down eastmoney fallback failed] {e}", file=sys.stderr)
 
-    # 封板率 / 炸板率 / 晋级率 / 成交额
-    # 炸板 = 涨停打开次数 ≥ 1（即开过板，无论回封与否）
+    # 封板率 / 开板比例 / 晋级率 / 成交额
+    # 开板 = 涨停股中盘中打开过涨停（涨停打开次数 ≥ 1，无论是否回封）
+    #
+    # 2026-09-25 口径修正：旧式 zha/(zt+zha) 有两个问题
+    #   1) 分母 zt+zha 对应不了任何真实群体，数学上限锁死 50%；
+    #   2) 标签写「炸板率」，而真炸板率（盘中触及涨停但收盘未封住 / 触及涨停）
+    #      必须扫全市场才算得出，涨停池根本算不出来。9/24 实算：真炸板率 21.54%，
+    #      同一天旧式给出 36.25%，两个数不是一回事。
+    # 经 21 个历史交易日复核：旧值与真开板比例 zha/zt 的相关系数 0.997，
+    # 是严格单调变换 p/(1+p)，排序完全一致、仅量级失真。
+    # 现一律改用真口径 p = zha/zt，量级可直接读（「涨停股里过半开过板」）。
+    # zha_rate 键名保留（下游模板已消费，改名有静默 undefined 风险），值同 open_rate。
+    # 配套改动：模板标签「炸板率」->「涨停股开板比例」；
+    #          阈值 0.30 -> 0.43（0.43 是旧尺度 0.30 的等价点：0.30/(1-0.30)=0.4286），
+    #          这样「情绪强势」徽章的触发条件保持不变。
     zha = sum(1 for r in lu if int(fnum(r.get("open_times", 0))) >= 1)
-    zt_rate = round(zt / (zt + zha), 4) if (zt + zha) else None  # 模板处 * 100 转%
-    zha_rate = round(zha / (zt + zha), 4) if (zt + zha) else None  # 炸板率
+    open_rate = round(zha / zt, 4) if zt else None          # 涨停股开板比例
+    zha_rate = open_rate                                     # 兼容旧键名，同值
+    zt_rate = round(1 - open_rate, 4) if open_rate is not None else None  # 封板率
     # 高板接力密度：今日 2板以上票数 / 总涨停（template 渲染时 * 100 转%）
     lb2 = sum(1 for r in lu if int(fnum(r.get("lbc", 0))) >= 2)
     promote_rate = round(lb2 / zt, 4) if zt else None
@@ -475,6 +814,16 @@ def main():
                 break
         if amount_e is not None:
             break
+
+    # 兜底：同花顺源缺失时（如 2026-09-14），保留已有 data_<date>.json 里的成交额
+    # （该值由 backfill_market_amount.py 用雪球口径补齐；否则每次汇总都会把补值洗回 None）
+    if amount_e is None and date != "未知":
+        try:
+            _self_path = os.path.join(HERE, f"data_{date.replace('-', '')}.json")
+            if os.path.exists(_self_path):
+                amount_e = (json.load(open(_self_path, encoding="utf-8")).get("market") or {}).get("amount")
+        except Exception:
+            pass
 
     # 载入盘后预取的 K线（由 fetch_klines.py 生成 klines_<date>.json）
     kline_path = os.path.join(HERE, f"klines_{date.replace('-','')}.json")
@@ -495,7 +844,8 @@ def main():
                 "prev_close": k.get("prev_close"),
                 "limit_price": k.get("limit_price"),
             }
-            if k.get("turnover_yi"):
+            # input 无真实成交额(字段恒0)时，用 kline 目标日当根成交额回填(亿) —— 供模板 成交额(亿) 列显示
+            if (not r.get("amount") or float(r.get("amount") or 0) <= 0) and k.get("turnover_yi"):
                 r["amount"] = k["turnover_yi"]
     for n in nodes:
         k = klines.get(str(n["code"]))
@@ -508,6 +858,10 @@ def main():
             }
             if k.get("turnover_yi"):
                 n["amount"] = k["turnover_yi"]
+                # ⚠ why 是在 pick_nodes() 阶段拼好的，那时 amount 还是 0（input 的成交额字段恒 0，
+                #   要等这里用 K 线回填），所以文案里的「成交X亿」必须跟着改，
+                #   否则卡片上永远显示「成交0.0亿」，而对象里的 amount 明明有值（2026-09-23 修）。
+                n["why"] = re.sub(r"成交[\d.]+亿", f"成交{n['amount']}亿", n.get("why") or "")
 
     # —— 重算连板：识别断板+反包，标注为「断板当日板数+1」——
     tk = date.replace("-", "")
@@ -582,39 +936,81 @@ def main():
                 print(f"     [次日溢价] inline 兜底跳过: {_e}")
             print(f"     [次日溢价] 暂无 T+1 数据 (待 {next_trading_day(date)} 09:25 后自动回填)")
 
+    # 题材角色（⑦ 龙头/中军/小弟）：给涨停池补流通市值，供前端识别板块中军
+    # 必须放在 agg_themes 之前：agg_themes 会逐字段复制，晚于它注入会丢失
+    try:
+        _caps = fetch_lscap([str(r["code"]) for r in lu])
+        for r in lu:
+            _v = _caps.get(str(r["code"]))
+            if _v:
+                r["lscap"] = round(_v, 2)
+        print(f"     [题材角色] 流通市值到手 {sum(1 for r in lu if r.get('lscap'))}/{len(lu)} 只")
+    except Exception as _e:
+        print(f"     [题材角色] 市值获取跳过: {_e}")
+
     # 题材聚合必须在 kline / next_premium 挂载之后，才能带出 has_k 与溢价
     themes = agg_themes(lu)
 
     market = {
         "limit_up": zt,
-        "limit_down": dt or None,
+        # 0 是有效值（真实无跌停），只有「接口没答上来」才写 None
+        "limit_down": dt if dt_known else None,
+        "limit_down_known": dt_known,
         "up": int(red) or None,
         "down": int(green) or None,
         "amount": amount_e,
-        "zt_rate": zt_rate,
-        "zha_rate": zha_rate,        # 炸板率
+        "zt_rate": zt_rate,          # 封板率 = 1 - 开板比例（涨停股口径）
+        "zha_rate": zha_rate,        # 兼容旧键名，值同 open_rate（2026-09-25 起改用真口径）
+        "open_rate": open_rate,      # 涨停股开板比例 = 开过板的涨停股 / 涨停股
         "promote_rate": promote_rate,  # 2板以上占比
         "max_lbc": max_lbc,           # 最高板
-        "zt_dt_ratio": round(zt / max(dt, 1), 2) if zt else None,  # 涨跌停家数比
+        # 涨跌停家数比。
+        # ⚠ 2026-10-01 修：旧式 `round(zt / max(dt, 1), 2)` 里的 `max(dt,1)` 把
+        #   「跌停 0 只」兜成 1，于是 77 涨停 / 0 跌停 被写成 **77.0** —— 那不是比值，
+        #   是涨停家数换了个名字。2026-09-18 就是这么一天（zt=77、dt=0、known=True、
+        #   字段值 77.0），而 9/18 在日期选择器里，前端按红色 "zt" 样式渲染成
+        #   「涨停/跌停 77」，读数的人会当成 77:1 的极强比价。
+        #   口径改为：dt=0 比值无定义 -> None；跌停未采集 -> None；其余 zt/dt。
+        #   前端 v2_template.html 的 zdRatio() 同时改成自己按 zt÷dt 重算（0 跌停显示 ∞），
+        #   双保险：历史归档不用重跑也能正确显示。
+        "zt_dt_ratio": (round(zt / dt, 2) if dt else None) if (zt and dt_known) else None,
     }
 
-    # 跌停池详情（前 8 只）
+    # 跌停池详情（前 8 只）：给每只跌停股挂 kline + amount + 流通市值，
+    # 便于模板渲染分时图、个股成交额与个股流通市值（用户 2026-09-28 要求 ③ 市场全景跌停池加市值列）
     limit_down_stocks = inp.get("limit_down_stocks", []) or []
+    _ld_codes = [str(_d["code"]) for _d in limit_down_stocks if _d.get("code")]
+    _ld_caps = {}
+    if _ld_codes:
+        try:
+            _ld_caps = fetch_lscap(_ld_codes)
+        except Exception as _e:
+            print(f"     [跌停池] 流通市值获取跳过: {_e}")
+    for _d in limit_down_stocks:
+        _k = klines.get(str(_d["code"]))
+        if _k:
+            _d["kline"] = {
+                "daily": _k.get("daily", []),
+                "intraday": _k.get("intraday", []),
+                "prev_close": _k.get("prev_close"),
+                "limit_price": _k.get("limit_price"),
+            }
+            if _k.get("turnover_yi"):
+                _d["amount"] = _k["turnover_yi"]
+        _v = _ld_caps.get(str(_d["code"]))
+        if _v:
+            _d["lscap"] = round(_v, 2)
 
     DATA = {
         "date": date,
         "next_day": next_trading_day(date),   # T+1 日期，用于"待T+1竞价"占位
-        "mode": {
-            "after-close": "盘后收盘复盘",
-            "midday": "午间收盘复盘",
-            "bidding": "次日开盘竞价策略",
-        }.get(mode, "盘中复盘"),
+        "mode": "盘后收盘复盘" if mode == "after-close" else "次日开盘竞价策略",
         "cycle": cycle,
         "market": market,
         "tianti": sorted(lu, key=lambda r: -r["lbc"]),
         "themes": themes,
         "nodes": nodes,
-        "limit_down_stocks": limit_down_stocks[:8],
+        "limit_down_stocks": limit_down_stocks[:20],
         "review": inp.get("review", {}) or {},
         "opening": build_opening(nodes, inp.get("bidding", []), mo, up_ratio) if mode == "bidding" else {},
         "discipline": inp.get("discipline"),
@@ -624,8 +1020,10 @@ def main():
         tpl = f.read()
     # 导出独立数据文件（供日期切换时 fetch，避免多日期重复打包渲染代码）
     data_file = os.path.join(HERE, f"data_{date.replace('-','')}.json")
+    _snapd = snapshot_before(date.replace("-", ""), data_file)
     with open(data_file, "w", encoding="utf-8") as f:
         json.dump(DATA, f, ensure_ascii=False)
+    snapshot_after(_snapd, data_file)
     # 扫描本目录所有 data_*.json，生成可复盘日期清单（降序，最新在前）
     # 同时把每份 DATA 完整内嵌进 HTML（dates_inline），保证 file:// 双击也能切换
     import glob as _glob
