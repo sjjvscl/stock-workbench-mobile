@@ -25,9 +25,18 @@
   .wrap{max-width:1500px;margin:0 auto}
   .topbar{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin:12px 0 10px}
   .grid{display:grid;gap:12px;scroll-margin-top:var(--stickH)}
-  .g-main{grid-template-columns:1.35fr 1fr}
-  .g-3{grid-template-columns:repeat(3,1fr)}
-  @media(max-width:1100px){.g-main,.g-3{grid-template-columns:1fr}}
+  /* ⚠ 轨道一律写 minmax(0,·fr)，不要裸 1fr。
+     裸 1fr 等价于 minmax(auto,1fr)，auto 下限取该项的 min-content：只要卡片里有个
+     「最小内容宽度」很大的子块（宽表、不换行的长单元格），轨道就被撑到那个宽度，
+     卡片跟着变宽，最终 documentElement.scrollWidth 远超视口 —— 表现是**整页能左右拖**，
+     而不只是那张表能拖。实测（innerW → scrollWidth）：
+       518 → 930（溢出 412）  修后 506
+       1146 → 1269（溢出 123）修后 1131
+     列宽比例不受影响：1180 宽下 627/464、1366 下 734/543、1440 下 776/575，都是 1.35:1，
+     与改前逐像素一致。 */
+  .g-main{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+  .g-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  @media(max-width:1100px){.g-main,.g-3{grid-template-columns:minmax(0,1fr)}}
   .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);scroll-margin-top:var(--stickH)}
   .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:13px}
@@ -315,7 +324,7 @@
     .date-bar select#dateSel{font-size:13px;font-weight:700;padding:4px 7px;max-width:min(52vw,220px)}
     .date-bar .db-nav{width:26px;height:26px}
     .rule-bar{padding:7px 10px}
-    .grid{grid-template-columns:1fr!important}
+    .grid{grid-template-columns:minmax(0,1fr)!important}
     .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
     .stat{padding:7px 6px}
     .stat .v{font-size:15px}
