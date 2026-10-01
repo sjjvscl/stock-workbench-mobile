@@ -998,8 +998,14 @@ function deriveDecision(cycle, market){
   return {cls:"defend", txt:"🟡 谨慎观察："+action};
 }
 function marketTemp(m){
-  const zt = m.zt_dt_ratio;
+  m = m || {};
   const zha = m.zha_rate;
+  /* 比值走 zdRatio()：跌停未采集 → null（说「未定」）；跌停真实为 0 → Infinity。
+     ⚠ 不能反手把「未知」读成「🧊 情绪转弱」——那是另一个方向的伪造。缺数据就说未定。 */
+  const zt = zdRatio(m);
+  if(zt == null){
+    return {cls:"mid", txt: dtKnown(m) ? "⚖ 情绪未定（涨跌停家数不全）" : "⚖ 情绪未定（跌停未采集）"};
+  }
   /* 2026-09-25 口径修正：zha_rate 由 zha/(zt+zha) 改为真口径 zha/zt（开板比例）。
      阈值同步由 0.30 换成 0.43 —— 0.30/(1-0.30)=0.4286，是旧尺度的等价点，
      「情绪强势」的触发条件因此保持完全不变。改值时务必同步改这里。 */
@@ -1037,12 +1043,66 @@ function renderMeta(){
     const s=document.createElement("span"); s.className="pill"; s.textContent=t; doEl.appendChild(s);
   });
 }
+/* 跌停家数是否**真的采集到**（2026-10-01 加）。
+
+   背景：历史归档里存在「快照缺跌停家数」的日期 —— `.github_deploy/data_*.json` 那 9 个 8 月日
+   与 20260918、20260911 的 `market.limit_down` 都是 null。此前有 4 处把它写成
+   `m.limit_down||0` / `??0`，等于把「没采集」渲染成「0 只跌停」。
+
+   为什么这个错要紧：跌停家数是周期判定的三个输入之一（zt / dt / max_lbc）。
+   最狠的一处在 renderBattle 的仓位定调：`dtN>=10` 判防守日、`dtN>=8` 判亏钱行情，
+   dt 未知被当成 0 时这两条**同时失效**，页面会给出偏松的仓位建议（进攻日 ≤50%），
+   而真实那天可能有一二十家跌停。对「不敢推仓 + 靠情绪周期出手」的用法，这是方向性错误。
+
+   判定口径：显式 `limit_down_known === false`，或 `limit_down == null`，都算未采集。
+   注意「已知且为 0」与「未知」必须分开 —— 前者是真的没有跌停，后者是我们的数据缺口。 */
+function dtKnown(m){
+  m = m || {};
+  if(m.limit_down_known === false) return false;
+  return m.limit_down != null;
+}
+function dtText(m){
+  return dtKnown(m) ? String((m||{}).limit_down) : "未采集";
+}
+/* 涨停/跌停比：**不信源侧的 `zt_dt_ratio` 字段，自己按 zt÷dt 重算**（2026-10-01 加）。
+ *
+ * 源侧写法是 `round(zt / max(dt, 1), 2)`，`max(dt,1)` 把「0 跌停」兜成 1，
+ * 于是 `77 涨停 / 0 跌停` 被写成 **77.0** —— 那不是比值，是涨停家数换了个名字。
+ * 实测 **2026-09-18**（涨停77、跌停0、limit_down_known=true、zt_dt_ratio=77.0）就是这一天，
+ * 而 9/18 就在日期选择器的 12 天里：页面用红色 "zt" 样式渲染成「涨停/跌停 77」，
+ * 读数的人会当成 77:1 的极强比价。其余 11 天 dt>0，字段值与真比值一致，不受影响。
+ *
+ * 三种返回：
+ *   null       缺输入（跌停未采集，或涨停家数缺）→ 显示「—」
+ *   Infinity   跌停真实为 0 → 比值无定义，显示「∞」（诚实；不要拿涨停家数冒充）
+ *   数字       正常比值，四舍五入两位
+ * 阈值判定沿用原口径：Infinity 天然 >= 10，仍然是「情绪强势」，行为不变。 */
+function zdRatio(m){
+  m = m || {};
+  if(!dtKnown(m)) return null;
+  const zt = m.limit_up, dt = m.limit_down;
+  if(zt == null || dt == null) return null;
+  if(!zt) return null;              // 没有涨停就没有比值
+  if(dt === 0) return Infinity;
+  return Math.round(zt / dt * 100) / 100;
+}
+function zdText(m){
+  const r = zdRatio(m);
+  if(r == null) return "—";
+  return r === Infinity ? "∞" : String(r);
+}
+function zdCls(m){
+  const r = zdRatio(m);
+  if(r == null) return "";
+  return r >= 10 ? "zt" : r >= 5 ? "warn" : "dt";
+}
 function renderMarket(){
   const m = DATA.market||{};
+  const dtOk = dtKnown(m);
   const stats = [
     {k:"涨停",v:m.limit_up,cls:"zt"},
-    {k:"跌停",v:m.limit_down,cls:"dt"},
-    {k:"涨停/跌停",v:m.zt_dt_ratio,cls:m.zt_dt_ratio>=10?"zt":m.zt_dt_ratio>=5?"warn":"dt"},
+    {k:"跌停",v:dtText(m),cls:dtOk?"dt":""},
+    {k:"涨停/跌停",v:zdText(m),cls:zdCls(m)},
     {k:"最高板",v:m.max_lbc,cls:"lbc"},
     {k:"开板比例",v:(m.zha_rate!=null?fmt(m.zha_rate*100,0)+"%":"—"),cls:m.zha_rate>=0.43?"warn":""},
     {k:"封板率",v:(m.zt_rate!=null?fmt(m.zt_rate*100,0)+"%":"—")},
@@ -1063,13 +1123,18 @@ function toggleLdPremiumSort(){
 function renderLimitDown(){
   const m = DATA.market||{};
   const lds = DATA.limit_down_stocks || [];
+  const dtOk = dtKnown(m);
   const ldc = m.limit_down||0;
   const ldt = el("limitDownTitle");
-  if(ldt) ldt.textContent = `跌停池 ${ldc} 只`;
+  /* ⚠ 未采集时标题不能写「跌停池 0 只」——那是在报一个我们并不知道的数字。 */
+  if(ldt) ldt.textContent = dtOk ? `跌停池 ${ldc} 只` : "跌停池 · 未采集";
   const ldb = el("limitDownBody");
   if(!ldb) return;
   if(!lds.length){
-    ldb.innerHTML = `<div class="muted" style="padding:8px">今日无跌停 — 情绪健康</div>`;
+    ldb.innerHTML = dtOk
+      ? `<div class="muted" style="padding:8px">今日无跌停 — 情绪健康</div>`
+      : `<div class="muted" style="padding:8px">该日<b>跌停数据未采集</b>（快照缺跌停家数），`
+        + `不是「今天没有跌停」。跌停家数是周期判定的三个输入之一，请勿据此处推断情绪健康。</div>`;
     return;
   }
   // 先把所有有 K 数据的跌停股注册到 KMAP（供 openKline 弹窗复用）
@@ -1129,7 +1194,7 @@ function renderScan(){
     {k:"晋级率", v:m.promote_rate!=null ? fmt(m.promote_rate*100,0)+"%" : "—", cls:m.promote_rate>=0.25?"zt":m.promote_rate>=0.15?"warn":"dt"},
     {k:"开板比例", v:m.zha_rate!=null ? fmt(m.zha_rate*100,0)+"%" : "—", cls:m.zha_rate>=0.43?"warn":""},
     {k:"封板率", v:m.zt_rate!=null ? fmt(m.zt_rate*100,0)+"%" : "—"},
-    {k:"跌停", v:m.limit_down ?? 0, cls:m.limit_down?"dt":""}
+    {k:"跌停", v:dtText(m), cls:dtKnown(m)?"dt":""}
   ];
   el("scanStats").innerHTML = stats.map(s=>`<div class="stat"><span class="k">${s.k}</span><span class="v ${s.cls||""}">${s.v??"—"}</span></div>`).join("");
   el("scanTodo").innerHTML = (cyc.todo||[]).map(t=>`<span class="pill">${t}</span>`).join("");
@@ -3614,20 +3679,33 @@ function renderBattle(){
   const ns = DATA.nodes||[];
   const pc = v => (v==null||isNaN(v)) ? "—" : (v*100).toFixed(1)+"%";
   const ratio = (m.up!=null && m.down) ? m.up/m.down : null;
-  const dtN = m.limit_down||0, ztN = m.limit_up||0;
+  /* 跌停家数未知（快照缺）时 dtN 一律取 null，绝不退化成 0 —— 见 dtKnown() 的注释：
+     退化成 0 会让下面 `dtN>=10` / `dtN>=8` 两条同时失效，把缺口读成「没有跌停」，
+     给出偏松的仓位建议。 */
+  const dtOk = dtKnown(m);
+  const dtN = dtOk ? m.limit_down : null, ztN = m.limit_up||0;
   const promote = m.promote_rate;
 
-  // 定调：跌停多或周期判主跌 → 防守；晋级率分档
-  let mood, color, cap, capMoney;
+  /* 定调：跌停多或周期判主跌 → 防守；晋级率分档
+     ⚠ 顺序要紧：先让「周期明判主跌/退潮」拿到防守日（不依赖跌停数），
+       再处理「跌停未采集」—— 缺口只封住**进攻**档，不能反过来把已知的退潮洗成观察日。 */
+  let mood, color, cap, capMoney, dtGap = "";
   const stage = String(cy.stage||"");
-  if(dtN>=10 || /主跌|退潮/.test(stage)){ mood="防守日"; color="green"; cap="0 ~ 10%"; capMoney="0 ~ 5000 元"; }
+  if(/主跌|退潮/.test(stage) || (dtOk && dtN>=10)){ mood="防守日"; color="green"; cap="0 ~ 10%"; capMoney="0 ~ 5000 元"; }
+  else if(!dtOk){
+    /* 周期三输入（zt / dt / max_lbc）缺一，不足以放行进攻仓。按观察日 ≤30% 定调，
+       宁紧不松；缺口原因写在卡片与 Q1/Q4 上，不静默降档。 */
+    mood="观察日"; color="amber"; cap="≤ 30%"; capMoney="≤ 15000 元";
+    dtGap="跌停家数未采集，本日不放行进攻仓，按观察日定调";
+  }
   else if(promote!=null && promote<0.30){ mood="分歧日"; color="amber"; cap="≤ 20%"; capMoney="≤ 10000 元"; }
   else if(promote!=null && promote>=0.50){ mood="进攻日"; color="red"; cap="≤ 50%"; capMoney="≤ 25000 元"; }
   else { mood="观察日"; color="amber"; cap="≤ 30%"; capMoney="≤ 15000 元"; }
   const CMAP = {red:["var(--red)","var(--redbg)"], green:["var(--green)","var(--greenbg)"], amber:["var(--amber)","var(--amberbg)"]};
   const cc = CMAP[color] || CMAP.amber;
 
-  const money = ((ratio!=null && ratio<0.5) || dtN>=8) ? "亏钱行情" : ((ratio!=null && ratio>=1.5) ? "赚钱行情" : "分化行情");
+  const money = !dtOk ? "待确认（跌停未采集）"
+    : ((ratio!=null && ratio<0.5) || dtN>=8) ? "亏钱行情" : ((ratio!=null && ratio>=1.5) ? "赚钱行情" : "分化行情");
   const mainTxt = th.length ? th.map(t=>`${t.name} <b style="color:var(--red)">${t.zt_count}</b>家`).join(" ｜ ") : "—";
   const nodeTxt = ns.length ? ns.slice(0,4).map(n=>`${n.name}（${n.lbc?n.lbc+"板":"首板"}）`).join("、") : "无";
   const topName = top.name || "—", topLbc = top.lbc || 0;
@@ -3765,17 +3843,18 @@ function renderBattle(){
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-radius:10px;background:${cc[1]};border:1px solid var(--border)">
       <span style="font-weight:800;font-size:16px;color:${cc[0]}">${nd} 定调：${mood}</span>
       <span class="muted" style="font-size:12px">周期 ${cy.stage||"—"} ｜ 仓位上限 <b style="color:${cc[0]}">${cap}</b>（5W本金 → ${capMoney}）</span>
+      ${dtGap?`<span style="font-size:12px;font-weight:700;color:var(--amber);background:#fff;border:1px solid var(--amber);border-radius:8px;padding:3px 9px">⚠ 数据缺口：${dtGap}</span>`:""}
     </div>
 
     <div style="font-weight:800;font-size:14px;margin:14px 0 0">开盘 5 问 <span class="muted" style="font-size:12px;font-weight:400">盘前必须逐条答完，答不上就不出手</span></div>
-    ${qbox("Q1","今天是赚钱还是亏钱行情，预期修复还是继续退？",`<b>${money}</b>。涨 ${m.up??"—"} / 跌 ${m.down??"—"}，涨停 ${ztN} / 跌停 ${dtN}，晋级率 ${pc(promote)}，炸板率 ${pc(m.zha_rate)}。`,false)}
+    ${qbox("Q1","今天是赚钱还是亏钱行情，预期修复还是继续退？",`<b>${money}</b>。涨 ${m.up??"—"} / 跌 ${m.down??"—"}，涨停 ${ztN} / 跌停 ${dtText(m)}${dtGap?"（"+dtGap+"）":""}，晋级率 ${pc(promote)}，炸板率 ${pc(m.zha_rate)}。`,false)}
     ${qbox("Q2","主线板块整体开得强不强？", mainTxt + "。", false)}
     ${qbox("Q3","最高标竞价是高开还是低开，有没有核深水？",`最高标 <b>${topName}（${topLbc} 板）</b>，${top.board||"—"}${top.open_times?`，炸板 ${top.open_times} 次`:""}。高开大于 +3% 情绪未崩；平开至 +3% 中性；低开或跌停就全天只守不攻。`,false)}
     ${qbox("Q4","今天允许的最大仓位是多少？",`<b>${cap}</b>（5W本金 → ${capMoney}），单票不超过 10%，先小仓试错，确认转强再加。`,false)}
     ${qbox("Q5","三类专属买点是否有标的触发观测条件？",`<b>A ${aOK?"有":"降级"}</b>：${aOK?topName+"（"+topLbc+" 板）":(aAlt.name?aAlt.name+"（空间板 "+topName+" 为缩量一字，不合格）":"前置不成立，暂停")}　｜　<b>B ${bTop.name?"有":"无"}</b>：${bTop.name?bTop.name+"（"+(bTop.days||bTop.lbc+" 板")+"断板）":"无合格标的"}　｜　<b>C ${cReady?"有":"无"}</b>：${cReady?"可挖掘补涨":"龙头未断板、无二波结构，暂停"}`,true)}
 
     ${stageBox("阶段一 · 盘前（头天晚上 / 开盘前）", [
-      li(`先看昨天市场：<b>${money}</b>`, `涨 ${m.up??"—"} / 跌 ${m.down??"—"} ｜ 涨停 ${ztN} / 跌停 ${dtN} ｜ 晋级率 ${pc(promote)} ｜ 炸板率 ${pc(m.zha_rate)}`),
+      li(`先看昨天市场：<b>${money}</b>`, `涨 ${m.up??"—"} / 跌 ${m.down??"—"} ｜ 涨停 ${ztN} / 跌停 ${dtText(m)}${dtGap?"（"+dtGap+"）":""} ｜ 晋级率 ${pc(promote)} ｜ 炸板率 ${pc(m.zha_rate)}`),
       li(`找出当天主线板块，分清主线和蹭热度的杂毛`, mainTxt),
       li(`挑候选票：要接力的连板、想试反包的断板票`, `弱转强节点：${nodeTxt} ｜ 最高板：${topName}（${topLbc}板）`)
     ])}
