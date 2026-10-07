@@ -1258,10 +1258,17 @@ function renderLimitDown(){
   const ldb = el("limitDownBody");
   if(!ldb) return;
   if(!lds.length){
-    ldb.innerHTML = dtOk
-      ? `<div class="muted" style="padding:8px">今日无跌停 — 情绪健康</div>`
-      : `<div class="muted" style="padding:8px">该日<b>跌停数据未采集</b>（快照缺跌停家数），`
-        + `不是「今天没有跌停」。跌停家数是周期判定的三个输入之一，请勿据此处推断情绪健康。</div>`;
+    /* ⚠ 2026-10-07 加第三种情形：家数已知 > 0、但归档里没有池内明细。
+       原写法只分「已知/未知」两种，已知就一律说「今日无跌停 — 情绪健康」——
+       那在「27 只跌停、池子空」的日子会与市场卡上的数字自相矛盾。
+       现在只有**真 0 跌停**才许说「今日无跌停」。 */
+    ldb.innerHTML = !dtOk
+      ? `<div class="muted" style="padding:8px">该日<b>跌停数据未采集</b>（快照缺跌停家数），`
+        + `不是「今天没有跌停」。跌停家数是周期判定的三个输入之一，请勿据此处推断情绪健康。</div>`
+      : (ldc > 0
+        ? `<div class="muted" style="padding:8px">当日记录 <b>${ldc} 只跌停</b>，`
+          + `但归档里没有跌停池明细（明细未采集）。家数以「市场全景 · 跌停」为准。</div>`
+        : `<div class="muted" style="padding:8px">今日无跌停 — 情绪健康</div>`);
     return;
   }
   // 先把所有有 K 数据的跌停股注册到 KMAP（供 openKline 弹窗复用）
@@ -1302,7 +1309,7 @@ function renderLimitDown(){
   ldb.innerHTML = `<table class="ldtable" style="font-size:12px">
     <thead><tr><th>代码</th><th>名称</th><th>跌幅</th><th>成交额(亿)</th><th>封单(亿)</th><th>流通市值(亿)</th>
     <th class="sortable" onclick="toggleLdPremiumSort()" title="点击切换排序：溢价大→小 / 小→大">次日溢价 <span class="smark">${mark}</span></th></tr></thead>
-    <tbody>${rows}</tbody></table>`;
+    <tbody>${rows}</tbody></table>${ldc>lds.length?`<div class="muted" style="font-size:11.5px;padding:6px 2px">仅列出前 ${lds.length} 只，当日共 ${ldc} 只跌停（明细不全，家数以「市场全景 · 跌停」为准）</div>`:""}`;
 }
 function renderScan(){
   const cyc = DATA.cycle||{};
