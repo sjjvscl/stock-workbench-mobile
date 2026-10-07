@@ -339,7 +339,16 @@
     .date-bar .db-hint{display:none}
     .date-bar select#dateSel{font-size:13px;font-weight:700;padding:4px 7px;max-width:min(52vw,220px)}
     .date-bar .db-nav{width:26px;height:26px}
-    .rule-bar{padding:7px 10px}
+    /* 窄屏：纪律芯片改**单行横滑**（2026-10-07）。原来 flex-wrap:wrap 会折成三行、
+       这条在 518px 视口下 99px、吃掉 13% 视口；PRO 再叠模式条 91px 之后四层合计
+       274px/37%，滚动时正文只剩半屏。横滑后芯片一个不少，高度降到约 40px。
+       「我已确认今日计划」按钮用 position:sticky 钉在右侧，横滑时也一直可点。 */
+    .rule-bar{padding:7px 10px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+    .rule-bar::-webkit-scrollbar{display:none}
+    .rule-bar .rb-confirm{margin-left:auto;position:sticky;right:0;z-index:1;
+      background:rgba(20,24,30,.98);padding-left:14px;
+      box-shadow:-10px 0 10px -4px rgba(20,24,30,.95)}
+    .rule-bar .rb-confirm.done{background:#128a4b;box-shadow:none}
     .grid{grid-template-columns:minmax(0,1fr)!important}
     .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
     .stat{padding:7px 6px}
