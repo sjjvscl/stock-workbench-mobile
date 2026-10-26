@@ -640,7 +640,304 @@
     <div class="scan-todo" id="scanTodo"></div>
   </div>
 
-  <!-- WBX_DUAL_INDEX_START -->
+  <!-- WB_FOCUS_START -->
+
+<style id="wbFocusCSS">
+#wbFocusBar{position:sticky;top:0;z-index:30;background:#fff;border:1px solid var(--border);
+  border-radius:10px;padding:8px;margin-bottom:12px;box-shadow:0 2px 8px rgba(21,32,48,.06)}
+#wbFocusBar .wfb-tabs{display:flex;gap:6px}
+#wbFocusBar button{flex:1;font:inherit;font-size:13px;font-weight:600;padding:9px 6px;
+  border-radius:8px;border:1px solid #dde3ec;background:#f7f9fc;color:#5b6672;cursor:pointer;
+  line-height:1.25;transition:all .12s}
+#wbFocusBar button.on{background:#16558f;border-color:#16558f;color:#fff}
+#wbFocusBar button small{display:block;font-size:10.5px;font-weight:400;opacity:.72;margin-top:2px}
+.wbp-pane{display:none}
+.wbp-pane.on{display:block}
+.wbp-card{margin-bottom:12px!important}
+#wbFocusMore{margin-top:4px}
+#wbFocusMore summary{cursor:pointer;font-size:13px;color:#64707d;padding:9px 12px;
+  background:#f7f9fc;border:1px dashed #dde3ec;border-radius:8px;list-style:none;text-align:center}
+#wbFocusMore summary::-webkit-details-marker{display:none}
+#wbFocusMore[open] summary{border-bottom-left-radius:0;border-bottom-right-radius:0}
+
+/* 结论条 */
+.wf-hero{border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid}
+.wf-hero.good{background:#fdf3f3;border-color:#f0c4c4}
+.wf-hero.bad{background:#f2f9f4;border-color:#bfe0c8}
+.wf-hero.mid{background:#fdf8ec;border-color:#eedaad}
+.wf-hero .row1{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.wf-hero .tag{font-size:15px;font-weight:800;padding:3px 11px;border-radius:6px;color:#fff;letter-spacing:.5px}
+.wf-hero.good .tag{background:#c0392b}
+.wf-hero.bad .tag{background:#27924a}
+.wf-hero.mid .tag{background:#c08a1e}
+.wf-hero .txt{font-size:14px;font-weight:700;color:#26313d;line-height:1.45}
+.wf-hero .meta{font-size:11.5px;color:#7b8794;margin-top:6px}
+.wf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.wf-m{background:rgba(255,255,255,.72);border-radius:7px;padding:7px 8px}
+.wf-m .k{font-size:10.5px;color:#7b8794}
+.wf-m .v{font-size:15px;font-weight:800;color:#26313d;font-variant-numeric:tabular-nums}
+.wf-m .v.up{color:#c0392b}
+.wf-m .v.dn{color:#27924a}
+.wf-m .d{font-size:10px;font-variant-numeric:tabular-nums}
+.wf-m .d.up{color:#c0392b}.wf-m .d.dn{color:#27924a}
+.wf-why{margin-top:10px;font-size:12px;color:#4a5561;line-height:1.7}
+.wf-why b{color:#26313d}
+.wf-why .neg{color:#27924a}
+
+/* 通用小卡 */
+.wf-sec{margin-bottom:13px}
+.wf-sec h3{font-size:13px;margin:0 0 7px;color:#26313d;display:flex;align-items:center;gap:6px}
+.wf-sec h3 span.n{font-size:11px;font-weight:400;color:#8a95a3}
+.wf-list{display:flex;flex-direction:column;gap:5px}
+.wf-item{display:flex;align-items:center;gap:8px;padding:7px 9px;background:#f8fafc;
+  border:1px solid #eef1f6;border-radius:7px;font-size:12.5px}
+.wf-item .nm{font-weight:700;color:#26313d;min-width:66px}
+.wf-item .bd{font-size:11px;padding:1px 6px;border-radius:4px;background:#e8eef7;color:#16558f}
+.wf-item .sub{color:#7b8794;font-size:11.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wf-item .num{font-variant-numeric:tabular-nums;color:#5b6672;font-size:11.5px}
+.wf-item.hot{background:#fdf3f3;border-color:#f3d5d5}
+
+/* 避坑清单 */
+.wf-av{display:flex;gap:8px;padding:9px 10px;border-radius:7px;margin-bottom:6px;
+  font-size:12.5px;line-height:1.55;border:1px solid}
+.wf-av.lv-高{background:#fdf3f3;border-color:#f0c4c4}
+.wf-av.lv-中{background:#fdf8ec;border-color:#eedaad}
+.wf-av.lv-底线{background:#f4f6f9;border-color:#e2e7ee}
+.wf-av .lv{font-weight:800;font-size:11px;white-space:nowrap;padding-top:1px}
+.wf-av.lv-高 .lv{color:#c0392b}
+.wf-av.lv-中 .lv{color:#a8741a}
+.wf-av.lv-底线 .lv{color:#6b7683}
+.wf-av .tx{color:#333d49}
+
+@media(max-width:720px){
+  .wf-grid{grid-template-columns:repeat(2,1fr)}
+  #wbFocusBar button{font-size:12px;padding:8px 4px}
+  .wf-hero .txt{font-size:13px}
+}
+</style>
+<div id="wbFocusBar"><div class="wfb-tabs"><button type="button" class="on" onclick="wbFocus('review')">今天怎么了<small>复盘当天数据</small></button><button type="button" class="" onclick="wbFocus('flow')">明天钱往哪走<small>资金持续流向</small></button><button type="button" class="" onclick="wbFocus('risk')">哪里会踩坑<small>避坑与仓位</small></button></div></div>
+<div id="wbFocusPanes"><div class="wbp-pane on" data-wbpane="review"><div class="wbp-body"></div></div><div class="wbp-pane" data-wbpane="flow"><div id="wfFlowBody"></div><div class="wbp-body"></div></div><div class="wbp-pane" data-wbpane="risk"><div id="wfAvoidBody"></div><div class="wbp-body"></div></div></div>
+<details id="wbFocusMore"><summary>方法论参考（三模型 / 作战卡 / 纪律全文，日常不用看）</summary><div class="wbp-body" style="padding-top:10px"></div></details>
+<script>window.WB_FOCUS={"date": "2026-10-22", "next_day": "2026-10-23", "flow": {"date": "2026-10-22", "next_day": "2026-10-23", "verdict": "退潮", "tone": "bad", "headline": "整体退潮，仅 人形机器人（7 家）逆势，明天只守不攻", "score": -8, "reasons": ["接力溢价 -1.69%，接昨日涨停就是亏", "晋级率降 -9pp", "涨停家数减 -16 家", "封板率降 -7pp", "跌停 49 家，亏钱效应重", "跌停家数增加 29 家，开始出现大面"], "metrics": [{"k": "涨停家数", "v": 33, "d": -16.333333333333336, "unit": "家", "signed": false}, {"k": "跌停家数", "v": 49, "d": 29.0, "unit": "家", "signed": false, "invert": true}, {"k": "封板率", "v": 39.39, "d": -7.123333333333331, "unit": "%", "signed": false}, {"k": "连板厚度", "v": 27.27, "d": -1.4600000000000002, "unit": "%", "signed": false}, {"k": "真晋级率", "v": 18.0, "d": -8.616027058178865, "unit": "%", "signed": false}, {"k": "接力溢价", "v": -1.6904739999999998, "d": -3.953167801844188, "unit": "%", "signed": true}], "persist": [{"code": "603278", "name": "大业股份", "lbc": 5, "days": 5, "board": "换手板", "fengdan": 2.58, "sector": "人形机器人", "cycle_board": "5天5板"}, {"code": "002724", "name": "海洋王", "lbc": 5, "days": 5, "board": "T字板", "fengdan": 0.68, "sector": "专业照明", "cycle_board": "5天5板"}, {"code": "002076", "name": "星光股份", "lbc": 3, "days": 4, "board": "T字板", "fengdan": 0.06, "sector": "数据要素", "cycle_board": "5天4板"}, {"code": "600293", "name": "三峡新材", "lbc": 3, "days": 3, "board": "一字板", "fengdan": 4.43, "sector": "重大重组", "cycle_board": "6天4板"}, {"code": "601999", "name": "出版传媒", "lbc": 2, "days": 3, "board": "换手板", "fengdan": 0.04, "sector": "出版发行", "cycle_board": "5天3板"}, {"code": "603330", "name": "天洋新材", "lbc": 2, "days": 3, "board": "换手板", "fengdan": 0.46, "sector": "电子胶", "cycle_board": "4天3板"}, {"code": "603138", "name": "海量数据", "lbc": 2, "days": 2, "board": "T字板", "fengdan": 0.18, "sector": "数据库", "cycle_board": "2天2板"}, {"code": "600838", "name": "上海九百", "lbc": 2, "days": 2, "board": "换手板", "fengdan": 0.45, "sector": "商贸零售", "cycle_board": "2天2板"}, {"code": "600202", "name": "哈空调", "lbc": 2, "days": 2, "board": "换手板", "fengdan": 0.02, "sector": "空冷器", "cycle_board": "2天2板"}, {"code": "000530", "name": "冰山冷热", "lbc": 1, "days": 3, "board": "换手板", "fengdan": 0.44, "sector": "冰雪工程", "cycle_board": "首板"}, {"code": "003021", "name": "兆威机电", "lbc": 1, "days": 2, "board": "换手板", "fengdan": 0.68, "sector": "人形机器人", "cycle_board": "4天2板"}, {"code": "002535", "name": "林州重机", "lbc": 1, "days": 2, "board": "换手板", "fengdan": 0.4, "sector": "煤矿机械", "cycle_board": "首板"}], "themes": [{"name": "人形机器人", "zt": 7, "stocks": ["大业股份", "兆威机电", "睿能科技", "鸣志电器", "多伦科技", "华新精科"]}, {"name": "“羊”字辈", "zt": 3, "stocks": ["海洋王", "天洋新材", "大洋电机"]}], "outflow": [{"name": "京城股份", "zdp": -9.943503379821777, "amount": 3.59}, {"name": "慕思股份", "zdp": -10.0, "amount": 2.05}, {"name": "新亚强", "zdp": -10.0204496383667, "amount": 4.85}, {"name": "爱玛科技", "zdp": -10.0, "amount": 2.78}, {"name": "曲美家居", "zdp": -9.935205459594727, "amount": 2.4}, {"name": "华森制药", "zdp": -10.020039558410645, "amount": 2.35}, {"name": "XD安邦护", "zdp": -10.0, "amount": 1.06}, {"name": "近岸蛋白", "zdp": -20.0, "amount": 9.96}, {"name": "亚邦股份", "zdp": -9.923664093017578, "amount": 3.23}, {"name": "三维化学", "zdp": -10.0, "amount": 1.9}, {"name": "上海雅仕", "zdp": -9.97150993347168, "amount": 1.77}, {"name": "新 华 都", "zdp": -9.986504554748535, "amount": 4.42}], "trend": [{"date": "20261013", "zt": 67, "lb": 12, "promo": 0.21739130434782608, "prem": 1.1260377777777777, "youzi": 0.71, "jieli": -0.97}, {"date": "20261014", "zt": 36, "lb": 20, "promo": 0.19402985074626866, "prem": -0.007095522388059695, "youzi": 0.25, "jieli": -2.57}, {"date": "20261015", "zt": 36, "lb": 13, "promo": 0.16666666666666666, "prem": -2.129930555555555, "youzi": 0.18, "jieli": -5.68}, {"date": "20261016", "zt": 59, "lb": 11, "promo": 0.16666666666666666, "prem": -1.6379583333333332, "youzi": 0.27, "jieli": -6.16}, {"date": "20261019", "zt": 46, "lb": 14, "promo": 0.1864406779661017, "prem": 0.458228813559322, "youzi": 0.37, "jieli": -3.88}, {"date": "20261020", "zt": 52, "lb": 19, "promo": 0.30434782608695654, "prem": 2.7727891304347825, "youzi": 0.41, "jieli": 2.38}, {"date": "20261021", "zt": 50, "lb": 22, "promo": 0.3076923076923077, "prem": 3.5570634615384615, "youzi": 0.46, "jieli": 4.6}, {"date": "20261022", "zt": 33, "lb": 10, "promo": 0.18, "prem": -1.6904739999999998, "youzi": 0.18, "jieli": -1.68}]}, "review": {"stage": "④ 主跌期", "action": "空仓 / 极小仓试错", "signal": "跌停49只 vs 涨停33只、开板比例61%、涨跌比0.09——亏钱效应主导，接力补涨皆危险。", "todo": ["切新题材一日游(仅前排)", "老题材连跌两天尾盘再博反弹", "不抢盘中反弹", "单笔亏≥2%当日停手", "别乱试抖音新战法"], "features": ["涨停 33 家", "跌停 49 家", "开板率 61%", "涨跌 448/4738", "成交 15277 亿"], "opportunities": [{"name": "大业股份", "code": "603278", "signal": "高度龙·换手", "why": "人形机器人 · 换手板 · 5天5板", "lbc": 5, "in_model": true, "box": "5板"}, {"name": "海洋王", "code": "002724", "signal": "高度龙·换手", "why": "专业照明 · T字板 · 5天5板", "lbc": 5, "in_model": true, "box": "5板"}, {"name": "出版传媒", "code": "601999", "signal": "大分歧回封·弱转强", "why": "出版发行 · 换手板 · 5天3板", "lbc": 2, "in_model": true, "box": "2板"}, {"name": "海量数据", "code": "603138", "signal": "大分歧回封·弱转强", "why": "数据库 · T字板 · 2天2板", "lbc": 2, "in_model": true, "box": "2板"}, {"name": "南方路机", "code": "603280", "signal": "换手确认·弱转强", "why": "工程搅拌 · 换手板 · 首板", "lbc": 1, "in_model": true, "box": "首板"}, {"name": "阳光照明", "code": "600261", "signal": "换手确认·弱转强", "why": "照明业务 · 换手板 · 首板", "lbc": 1, "in_model": true, "box": "首板"}, {"name": "芯瑞达", "code": "002983", "signal": "换手确认·弱转强", "why": "Mini/Micro-LED · 换手板 · 首板", "lbc": 1, "in_model": true, "box": "首板"}, {"name": "山河智能", "code": "002097", "signal": "换手确认·弱转强", "why": "工程机械 · 换手板 · 首板", "lbc": 1, "in_model": true, "box": "首板"}], "verdict": "退潮"}, "avoid": [{"lv": "高", "t": "退潮期不接力高位，昨天的连板今天是卖点"}, {"lv": "高", "t": "不抢盘中反弹，反弹是出货不是启动"}, {"lv": "高", "t": "接力溢价 -1.7%，昨日涨停股整体亏钱，别接"}, {"lv": "高", "t": "跌停 49 家，市场在杀跌，逆势加仓是送钱"}, {"lv": "中", "t": "开板率 61%，封板质量差，追板容易被埋"}, {"lv": "中", "t": "今日大面：京城股份、慕思股份、新亚强、爱玛科技，同方向明日不接"}, {"lv": "底线", "t": "单笔亏 ≥2% 当日停手，不做情绪化补仓"}, {"lv": "底线", "t": "盘中不临时起意，不进计划外的票"}]};</script>
+<script>
+(function(){
+  var PLAN = {
+    review: ['sCycle','sDualIndex','sTianti','sThemes','sRoles'],
+    flow:   ['sNodes','sBuyPool','sScreener','sSeats','sPlan'],
+    risk:   ['sRisk','sPos','sDiscipline']
+  };
+  var MORE = ['sFocus','sReview','sFramework','sBattle'];
+  var LABEL = {review:'今天怎么了', flow:'明天钱往哪走', risk:'哪里会踩坑'};
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>]/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+  function fnum(v,d){ if(v==null||isNaN(v)) return '—';
+    return (v>0?'+':'')+Number(v).toFixed(d==null?1:d); }
+
+  /* ---------- 资金流向 ---------- */
+  function renderFlow(){
+    var box = document.getElementById('wfFlowBody');
+    var D = window.WB_FOCUS; if(!box || !D || !D.flow) return;
+    var f = D.flow, h = [];
+
+    h.push('<div class="wf-hero '+f.tone+'">');
+    h.push('<div class="row1"><span class="tag">'+esc(f.verdict)+'</span>');
+    h.push('<span style="font-size:11.5px;color:#7b8794">'+esc(f.date)+' 收盘 → 次日 '+esc(f.next_day||'')+'</span></div>');
+    h.push('<div class="txt">'+esc(f.headline)+'</div>');
+
+    h.push('<div class="wf-grid">');
+    (f.metrics||[]).forEach(function(m){
+      if(m.v==null) return;
+      // signed=true 才带正负号（溢价）；比率与家数一律不带，
+      // 否则会写出「封板率 +52.5%」这种荒唐值。
+      var vs = m.signed ? (fnum(m.v,1)+'%')
+                        : (m.unit==='%' ? Number(m.v).toFixed(1)+'%'
+                                        : Math.round(m.v)+(m.unit||''));
+      var cls='';
+      if(m.signed) cls = m.v>0?'up':(m.v<0?'dn':'');
+      var dc='';
+      if(m.d!=null){
+        var dd = m.unit==='%' ? fnum(m.d,1) : fnum(m.d,0);
+        var ddcls = m.d>0?'up':(m.d<0?'dn':'');
+        // invert=true 的指标（跌停家数）升高是坏事，红绿要反过来
+        if(m.invert) ddcls = m.d>0?'dn':(m.d<0?'up':'');
+        dc = '<div class="d '+ddcls+'">'+dd+(m.unit==='%'?'pp':'')+'</div>';
+      }
+      h.push('<div class="wf-m"><div class="k">'+esc(m.k)+'</div>'+
+             '<div class="v '+cls+'">'+vs+'</div>'+dc+'</div>');
+    });
+    h.push('</div>');
+
+    if(f.reasons && f.reasons.length){
+      h.push('<div class="wf-why">');
+      f.reasons.forEach(function(r){
+        var neg = /仅|减|降|跌停|没人/.test(r);
+        h.push('<div class="'+(neg?'neg':'')+'">· '+esc(r)+'</div>');
+      });
+      h.push('</div>');
+    }
+    h.push('</div>');
+
+    // 持续做多
+    var ps = f.persist||[];
+    h.push('<div class="wf-sec"><h3>跨日持续做多 <span class="n">近 6 日反复涨停且今日仍在，'+ps.length+' 只</span></h3>');
+    if(!ps.length) h.push('<div class="wf-item"><span class="sub">无（说明没有资金在连续做同一批票）</span></div>');
+    else {
+      h.push('<div class="wf-list">');
+      ps.forEach(function(p){
+        var hot = (p.lbc||0)>=3 ? ' hot' : '';
+        // 当日连板数与周期统计分开写：单写 lbc 会出现「1板 8天4板」的矛盾
+        var bd = '当日'+(p.lbc||1)+'板';
+        var extra = p.cycle_board ? ' · '+esc(p.cycle_board) : '';
+        h.push('<div class="wf-item'+hot+'">'+
+          '<span class="nm">'+esc(p.name)+'</span>'+
+          '<span class="bd">'+bd+'</span>'+
+          '<span class="sub">'+esc(p.sector||'')+extra+' · 近6日'+p.days+'次</span>'+
+          '<span class="num">'+esc(p.board||'')+' 封'+(p.fengdan!=null?p.fengdan:'—')+'亿</span></div>');
+      });
+      h.push('</div>');
+    }
+    h.push('</div>');
+
+    // 题材聚集
+    var ts = f.themes||[];
+    h.push('<div class="wf-sec"><h3>钱聚集在哪 <span class="n">当日涨停≥3家的题材</span></h3>');
+    if(!ts.length) h.push('<div class="wf-item"><span class="sub">无题材形成聚集</span></div>');
+    else{
+      h.push('<div class="wf-list">');
+      ts.forEach(function(t,i){
+        h.push('<div class="wf-item'+(i===0?' hot':'')+'">'+
+          '<span class="nm">'+esc(t.name)+'</span>'+
+          '<span class="bd">'+t.zt+'家</span>'+
+          '<span class="sub">'+esc((t.stocks||[]).join('、'))+'</span></div>');
+      });
+      h.push('</div>');
+    }
+    h.push('</div>');
+
+    // 钱从哪撤
+    var os = f.outflow||[];
+    if(os.length){
+      h.push('<div class="wf-sec"><h3>钱从哪撤 <span class="n">今日跌停 '+os.length+' 只</span></h3><div class="wf-list">');
+      os.slice(0,8).forEach(function(x){
+        h.push('<div class="wf-item"><span class="nm">'+esc(x.name)+'</span>'+
+          '<span class="sub">成交 '+esc(x.amount!=null?x.amount:'—')+'亿</span>'+
+          '<span class="num" style="color:#27924a">'+fnum(x.zdp,1)+'%</span></div>');
+      });
+      h.push('</div></div>');
+    }
+    box.innerHTML = h.join('');
+  }
+
+  /* ---------- 复盘 ---------- */
+  function renderReview(){
+    var D = window.WB_FOCUS; if(!D || !D.review) return;
+    var r = D.review;
+    var host = document.querySelector('[data-wbpane="review"] .wbp-body');
+    if(!host) return;
+    var h = [];
+    h.push('<div class="card" style="margin-bottom:12px">');
+    h.push('<h2>当日复盘结论 <span class="sub">（'+esc(r.stage||'')+'）</span></h2>');
+    h.push('<div style="font-size:13px;line-height:1.7;color:#333d49;margin-bottom:8px">'+
+           '<b>盘面：</b>'+esc((r.features||[]).join(' ／ '))+'</div>');
+    if(r.signal){
+      h.push('<div style="font-size:12.5px;line-height:1.65;color:#5b6672;background:#f7f9fc;'+
+             'padding:9px;border-radius:7px;margin-bottom:9px">'+esc(r.signal)+'</div>');
+    }
+    if(r.todo && r.todo.length){
+      h.push('<div class="wf-sec"><h3>阶段动作</h3><div class="wf-list">');
+      r.todo.forEach(function(t){
+        h.push('<div class="wf-item"><span class="sub">'+esc(t)+'</span></div>');
+      });
+      h.push('</div></div>');
+    }
+    var ops = r.opportunities||[];
+    if(ops.length){
+      h.push('<div class="wf-sec"><h3>模式内机会 <span class="n">打勾=信号成立，未打勾=仅观察</span></h3><div class="wf-list">');
+      ops.forEach(function(o){
+        var mk = o.in_model ? '✓' : '○';
+        h.push('<div class="wf-item'+(o.in_model?' hot':'')+'">'+
+          '<span class="nm" style="min-width:78px">'+mk+' '+esc(o.name)+'</span>'+
+          '<span class="bd">'+(o.lbc||1)+'板</span>'+
+          '<span class="sub">'+esc(o.signal||'')+' · '+esc(o.why||'')+'</span></div>');
+      });
+      h.push('</div></div>');
+    }
+    h.push('</div>');
+    // 插到复盘屏最前面
+    var first = host.firstChild;
+    var tmp = document.createElement('div');
+    tmp.innerHTML = h.join('');
+    while(tmp.firstChild) host.insertBefore(tmp.firstChild, first);
+  }
+
+  /* ---------- 避坑 ---------- */
+  function renderAvoid(){
+    var box = document.getElementById('wfAvoidBody');
+    var D = window.WB_FOCUS; if(!box || !D || !D.avoid) return;
+    var h = ['<div class="wf-hero '+((D.flow&&D.flow.tone)||'mid')+'">'];
+    h.push('<div class="row1"><span class="tag">避坑</span>'+
+      '<span style="font-size:11.5px;color:#7b8794">'+esc(D.date)+' → '+esc(D.next_day||'')+'</span></div>');
+    h.push('<div class="txt">下面每一条都是明天会直接亏钱的动作，按等级从上到下守。</div></div>');
+    (D.avoid||[]).forEach(function(a){
+      h.push('<div class="wf-av lv-'+esc(a.lv)+'"><span class="lv">'+esc(a.lv)+'</span>'+
+             '<span class="tx">'+esc(a.t)+'</span></div>');
+    });
+    box.innerHTML = h.join('');
+  }
+
+  /* ---------- 重排 ---------- */
+  function mount(){
+    Object.keys(PLAN).forEach(function(k){
+      var pane = document.querySelector('[data-wbpane="'+k+'"] .wbp-body');
+      if(!pane) return;
+      PLAN[k].forEach(function(id){
+        var el = document.getElementById(id);
+        if(el && el.parentNode !== pane){ el.classList.add('wbp-card'); pane.appendChild(el); }
+      });
+    });
+    var more = document.querySelector('#wbFocusMore .wbp-body');
+    if(more){
+      MORE.forEach(function(id){
+        var el = document.getElementById(id);
+        if(el && el.parentNode !== more){ el.classList.add('wbp-card'); more.appendChild(el); }
+      });
+    }
+    // 被搬空的 grid 容器收掉，避免留下大片留白
+    var grids = document.querySelectorAll('.grid.g-main');
+    for(var i=0;i<grids.length;i++){
+      if(!grids[i].querySelector('.card')) grids[i].style.display='none';
+      else grids[i].style.display='';
+    }
+    renderFlow(); renderReview(); renderAvoid();
+  }
+
+  window.wbFocus = function(pid){
+    var panes = document.querySelectorAll('.wbp-pane');
+    for(var i=0;i<panes.length;i++){
+      panes[i].classList.toggle('on', panes[i].getAttribute('data-wbpane')===pid);
+    }
+    var btns = document.querySelectorAll('#wbFocusBar button');
+    for(var j=0;j<btns.length;j++){
+      var txt = btns[j].textContent || '';
+      btns[j].classList.toggle('on', txt.indexOf(LABEL[pid]||'###')===0);
+    }
+    try{ sessionStorage.setItem('wbFocusPane', pid); }catch(e){}
+  };
+
+  function boot(){
+    mount();
+    try{
+      var last = sessionStorage.getItem('wbFocusPane');
+      if(last && LABEL[last]) window.wbFocus(last);
+    }catch(e){}
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+<!-- WB_FOCUS_END -->
+<!-- WBX_DUAL_INDEX_START -->
   <div class="card" id="sDualIndex" style="margin-bottom:12px">
     <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">情绪周期双指数曲线图<span class="sub">（游资指数＝资金水位·恒正　接力指数＝接力情绪·含正负　0 轴为平衡线）</span><span style="margin-left:auto;display:flex;gap:6px"><button type="button" onclick="wbxDual(this,'d28')" style="font:inherit;font-size:12px;padding:4px 12px;border-radius:6px;cursor:pointer;border:1px solid #16558f;background:#16558f;color:#fff">近 1 月</button><button type="button" onclick="wbxDual(this,'d65')" style="font:inherit;font-size:12px;padding:4px 12px;border-radius:6px;cursor:pointer;border:1px solid #dde3ec;background:#fff;color:#64707d">近 3 月</button><button type="button" onclick="wbxDual(this,'d00')" style="font:inherit;font-size:12px;padding:4px 12px;border-radius:6px;cursor:pointer;border:1px solid #dde3ec;background:#fff;color:#64707d">全部</button></span></h2>
     <div class="row" style="gap:16px;margin-bottom:8px"><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#64707d"><span style="width:16px;height:3px;border-radius:2px;background:#16558f"></span>游资指数</span><span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#64707d"><span style="width:16px;height:3px;border-radius:2px;background:#8cc152"></span>接力指数</span><span class="sub" style="margin-left:auto">鼠标移到曲线上看十字线与当日明细（手机按住拖动）</span></div>
@@ -968,7 +1265,7 @@ window.WB_INDUSTRY={"000011": "房地产开发", "000530": "通用设备", "0006
 /* 昨日 2 板以上今日断板的票（build_v2.py 跨日比对注入），⑧ 次日买点预期池 B 组用。
    字段：{code,name,lbc,is_top,reason,theme}；is_top=昨日最高板（空间板）。
    ⚠ 断板是跨日概念，前端只有当日的 WB_DATA，所以这份清单必须在 build 阶段算好带进来。 */
-window.WB_BREAK=[{"code":"600178","name":"东安动力","lbc":4,"is_top":true,"days":"4天4板","total":4,"reason":"飞行汽车.增程器.汽车动力","theme":"飞行汽车"},{"code":"002929","name":"润建股份","lbc":3,"is_top":false,"days":"3天3板","total":3,"reason":"词元出海.网络安全大模型.算力网络","theme":"词元出海"},{"code":"001239","name":"永达股份","lbc":2,"is_top":false,"days":"2天2板","total":2,"reason":"盾构机.风电锻件.并购重组","theme":"盾构机"},{"code":"002181","name":"粤传媒","lbc":2,"is_top":false,"days":"2天2板","total":2,"reason":"微短剧.妙创平台.参股投资收益","theme":"微短剧"},{"code":"002242","name":"九阳股份","lbc":2,"is_top":false,"days":"2天2板","total":2,"reason":"机器人投资.厨房小家电.豆浆机.“羊”字辈","theme":"机器人投资"},{"code":"002313","name":"日海智能","lbc":2,"is_top":false,"days":"2天2板","total":2,"reason":"端侧AI.无线模组.机器人应用.国资划转","theme":"端侧AI"},{"code":"002347","name":"泰尔股份","lbc":2,"is_top":false,"days":"2天2板","total":2,"reason":"工业机器人.冶金装备","theme":"工业机器人"},{"code":"002696","name":"百洋股份","lbc":2,"is_top":false,"days":"9天7板","total":7,"reason":"水产饲料.鱼粉涨价.青岛国资.“羊”字辈","theme":"水产饲料"},{"code":"002835","name":"同为股份","lbc":2,"is_top":false,"days":"2天2板","total":2,"reason":"视频监控.人工智能安防.海外业务.AI ISP","theme":"视频监控"},{"code":"603236","name":"移远通信","lbc":2,"is_top":false,"days":"2天2板","total":2,"reason":"端侧AI.机器人.通信模组.业绩增长","theme":"端侧AI"},{"code":"603636","name":"南威软件","lbc":2,"is_top":false,"days":"4天3板","total":3,"reason":"AI短剧.数据要素.政务智能体.数字政府","theme":"AI短剧"},{"code":"603696","name":"安记食品","lbc":2,"is_top":false,"days":"2天2板","total":2,"reason":"复合调味品.对台贸易.业绩增长","theme":"复合调味品"}];
+window.WB_BREAK=[];
 </script>
 <script>
 /* 【连续放高量次日高开弱转强】盘后观察池（D:/炒股/scan_vol_model.py 产出，build_v2.py 读 vol_pool_<date>.json 注入），⑯ 买点 A 用。
