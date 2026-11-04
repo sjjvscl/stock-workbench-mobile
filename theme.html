@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>题材角色标注 · 2026-11-03</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--text:#151a21;--muted:#6a7480;--bd:#e2e7ee;--red:#c92a1e;--blue:#16558f;--green:#128a4b;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 -apple-system,"Microsoft YaHei",sans-serif}
+header.top{background:#fff;border-bottom:1px solid var(--bd);padding:18px 22px;position:sticky;top:0;z-index:9}
+header.top h1{margin:0 0 6px;font-size:19px}
+header.top .meta{color:var(--muted);font-size:13px}
+.legend{margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend b{color:var(--text)}
+main{padding:16px 22px 60px;max-width:1180px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 2px rgba(20,30,50,.04)}
+.card header{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--bd);background:#fafbfd;flex-wrap:wrap}
+.card h2{margin:0;font-size:16px}
+.cnt{background:var(--red);color:#fff;border-radius:11px;padding:1px 8px;font-size:12px}
+.roles{color:var(--muted);font-size:12px}
+.subs{padding:6px 14px;color:var(--muted);font-size:12px;border-bottom:1px solid #f0f3f7}
+table{width:100%;border-collapse:collapse}
+th,td{padding:7px 10px;text-align:left;font-size:13px;border-bottom:1px solid #f2f4f8}
+th{color:var(--muted);font-weight:500;font-size:12px;background:#fcfdff}
+tr.r-leader{background:#fff6f5}
+tr.r-mid{background:#f5f9ff}
+td.role{font-weight:600}
+tr.r-leader td.role{color:var(--red)}
+tr.r-mid td.role{color:var(--blue)}
+tr.r-follower td.role{color:var(--muted)}
+td.code{font-family:ui-monospace,Consolas,monospace;color:#333}
+td.name{font-weight:600}
+tr.r-leader td.name{font-size:14px}
+td.bl{color:var(--red);font-weight:600}
+td.cap.cap-l{color:#8a2be2;font-weight:600}
+td.cap.cap-m{color:var(--blue)}
+td.cap.cap-s{color:var(--muted)}
+.tg{font-style:normal;font-size:11px;background:#eef1f6;color:var(--muted);border-radius:3px;padding:0 4px;margin-left:4px}
+.tg.fanbao{background:#e6f5ec;color:var(--green)}
+.tg.offind{background:#fdecec;color:#b3261e;font-weight:700;border:1px solid #f3c9c6}
+footer.note{margin-top:18px;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:14px 16px;font-size:13px;color:#414b57}
+footer.note h3{margin:0 0 8px;font-size:14px}
+footer.note code{background:#eef1f6;padding:1px 5px;border-radius:3px;font-size:12px}
+</style></head><body>
+<header class="top">
+  <h1>题材角色标注 · 2026-11-03</h1>
+  <div class="meta">主线题材 17 个 ｜ 涨停票 70 只 ｜ 生成 2026-11-04 08:53</div>
+  <div class="legend">
+    <span><b>龙头</b>：连板最高 + 首封最早 + 封单最大（身位标签优先）</span>
+    <span><b>中军</b>：题材内成交额最大 · 市值最大（只标 1 只）</span>
+    <span><b>小弟</b>：其余跟风票</span>
+    <span>市值配色：<b style="color:#8a2be2">≥300亿</b> / <b style="color:#16558f">100-300亿</b> / <b style="color:#6a7480">&lt;100亿</b></span>
+  </div>
+</header>
+<main>
+<section class="card">
+  <header>
+    <h2>消费/食品饮料</h2>
+    <span class="cnt">11 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 9</span>
+  </header>
+  <div class="subs">细分标签：冰雪旅游保障、即时零售、大消费、旅游演艺、旅游索道、白酒</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">000995</td>
+  <td class="name">皇台酒业<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">3板</td>
+  <td class="t">09:25:00</td>
+  <td class="fd">1.38</td>
+  <td class="am">0.6</td>
+  <td class="cap cap-s">30亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">002696</td>
+  <td class="name">百洋股份<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">10:26:27</td>
+  <td class="fd">0.99</td>
+  <td class="am">9.5</td>
+  <td class="cap cap-s">41亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">605388</td>
+  <td class="name">均瑶健康<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:25:04</td>
+  <td class="fd">0.34</td>
+  <td class="am">0.3</td>
+  <td class="cap cap-s">40亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">600358</td>
+  <td class="name">国旅联合<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg offind" title="所属行业「广告营销」与题材「消费/食品饮料」不符，疑似蹭概念/跨界">⚠异业 广告营销</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:32:29</td>
+  <td class="fd">0.31</td>
+  <td class="am">1.1</td>
+  <td class="cap cap-s">28亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">600327</td>
+  <td class="name">大东方<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:57:28</td>
+  <td class="fd">0.23</td>
+  <td class="am">2.1</td>
+  <td class="cap cap-s">38亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">603402</td>
+  <td class="name">陕西旅游<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">10:49:12</td>
+  <td class="fd">0.97</td>
+  <td class="am">1.6</td>
+  <td class="cap cap-s">14亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">600630</td>
+  <td class="name">龙头股份<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">11:17:44</td>
+  <td class="fd">0.48</td>
+  <td class="am">2.1</td>
+  <td class="cap cap-s">30亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">600778</td>
+  <td class="name">友好集团<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">13:00:18</td>
+  <td class="fd">0.20</td>
+  <td class="am">0.9</td>
+  <td class="cap cap-s">17亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">601366</td>
+  <td class="name">利群股份<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">14:01:34</td>
+  <td class="fd">0.35</td>
+  <td class="am">1.0</td>
+  <td class="cap cap-s">38亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">001318</td>
+  <td class="name">阳光乳业<i class="tg">👑身位</i></td>
+  <td class="bl">首板</td>
+  <td class="t">14:29:27</td>
+  <td class="fd">0.30</td>
+  <td class="am">7.9</td>
+  <td class="cap cap-s">45亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">601188</td>
+  <td class="name">龙江交通<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「铁路公路」与题材「消费/食品饮料」不符，疑似蹭概念/跨界">⚠异业 铁路公路</i></td>
+  <td class="bl">首板</td>
+  <td class="t">14:56:54</td>
+  <td class="fd">0.12</td>
+  <td class="am">8.8</td>
+  <td class="cap cap-s">48亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>锂电池</h2>
+    <span class="cnt">11 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 9</span>
+  </header>
+  <div class="subs">细分标签：HVLP铜箔、固态电池、固态电池材料、固态电池设备、复合铜箔、电池铝箔</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">002058</td>
+  <td class="name">紫竹高科<i class="tg">👑身位</i></td>
+  <td class="bl">2板</td>
+  <td class="t">09:48:48</td>
+  <td class="fd">0.73</td>
+  <td class="am">2.5</td>
+  <td class="cap cap-s">30亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">002580</td>
+  <td class="name">圣阳股份<i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:37:06</td>
+  <td class="fd">2.57</td>
+  <td class="am">7.2</td>
+  <td class="cap cap-s">84亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">600293</td>
+  <td class="name">三峡新材<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「玻璃玻纤」与题材「锂电池」不符，疑似蹭概念/跨界">⚠异业 玻璃玻纤</i></td>
+  <td class="bl">2板</td>
+  <td class="t">09:56:21</td>
+  <td class="fd">0.61</td>
+  <td class="am">7.2</td>
+  <td class="cap cap-s">46亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">603381</td>
+  <td class="name">永臻股份<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「光伏设备」与题材「锂电池」不符，疑似蹭概念/跨界">⚠异业 光伏设备</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:36:09</td>
+  <td class="fd">0.44</td>
+  <td class="am">0.9</td>
+  <td class="cap cap-s">22亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">002088</td>
+  <td class="name">鲁阳节能<i class="tg fanbao">反包</i><i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「装修建材」与题材「锂电池」不符，疑似蹭概念/跨界">⚠异业 装修建材</i></td>
+  <td class="bl">1+1</td>
+  <td class="t">09:39:27</td>
+  <td class="fd">0.29</td>
+  <td class="am">1.2</td>
+  <td class="cap cap-s">42亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">603906</td>
+  <td class="name">龙蟠科技<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:47:13</td>
+  <td class="fd">0.77</td>
+  <td class="am">3.6</td>
+  <td class="cap cap-s">88亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">605378</td>
+  <td class="name">野马电池<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:49:49</td>
+  <td class="fd">0.55</td>
+  <td class="am">1.0</td>
+  <td class="cap cap-s">38亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">002805</td>
+  <td class="name">丰元股份</td>
+  <td class="bl">首板</td>
+  <td class="t">10:03:33</td>
+  <td class="fd">0.89</td>
+  <td class="am">3.0</td>
+  <td class="cap cap-s">40亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">301513</td>
+  <td class="name">尚水智能<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">10:05:39</td>
+  <td class="fd">0.55</td>
+  <td class="am">3.0</td>
+  <td class="cap cap-s">12亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">600241</td>
+  <td class="name">时代万恒<i class="tg">👑身位</i></td>
+  <td class="bl">首板</td>
+  <td class="t">10:21:28</td>
+  <td class="fd">0.40</td>
+  <td class="am">4.1</td>
+  <td class="cap cap-s">27亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">002992</td>
+  <td class="name">宝明科技<i class="tg offind" title="所属行业「光学光电子」与题材「锂电池」不符，疑似蹭概念/跨界">⚠异业 光学光电子</i></td>
+  <td class="bl">首板</td>
+  <td class="t">14:25:21</td>
+  <td class="fd">0.01</td>
+  <td class="am">1.7</td>
+  <td class="cap cap-s">48亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>“羊”字辈</h2>
+    <span class="cnt">10 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 8</span>
+  </header>
+  
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">600261</td>
+  <td class="name">阳光照明<i class="tg">👑身位</i><i class="tg">⚡最早</i></td>
+  <td class="bl">4板</td>
+  <td class="t">09:35:56</td>
+  <td class="fd">1.99</td>
+  <td class="am">16.8</td>
+  <td class="cap cap-s">66亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">002696</td>
+  <td class="name">百洋股份</td>
+  <td class="bl">首板</td>
+  <td class="t">10:26:27</td>
+  <td class="fd">0.99</td>
+  <td class="am">9.5</td>
+  <td class="cap cap-s">41亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">002086</td>
+  <td class="name">东方海洋<i class="tg">👑身位</i></td>
+  <td class="bl">4板</td>
+  <td class="t">10:05:30</td>
+  <td class="fd">2.16</td>
+  <td class="am">7.9</td>
+  <td class="cap cap-s">54亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">002580</td>
+  <td class="name">圣阳股份<i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:37:06</td>
+  <td class="fd">2.57</td>
+  <td class="am">7.2</td>
+  <td class="cap cap-s">84亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">002088</td>
+  <td class="name">鲁阳节能<i class="tg fanbao">反包</i></td>
+  <td class="bl">1+1</td>
+  <td class="t">09:39:27</td>
+  <td class="fd">0.29</td>
+  <td class="am">1.2</td>
+  <td class="cap cap-s">42亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">600558</td>
+  <td class="name">大西洋</td>
+  <td class="bl">首板</td>
+  <td class="t">09:39:31</td>
+  <td class="fd">0.86</td>
+  <td class="am">4.5</td>
+  <td class="cap cap-s">56亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">002300</td>
+  <td class="name">太阳电缆</td>
+  <td class="bl">首板</td>
+  <td class="t">10:27:54</td>
+  <td class="fd">0.53</td>
+  <td class="am">7.6</td>
+  <td class="cap cap-s">63亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">000591</td>
+  <td class="name">太阳能</td>
+  <td class="bl">首板</td>
+  <td class="t">10:57:15</td>
+  <td class="fd">0.91</td>
+  <td class="am">7.7</td>
+  <td class="cap cap-m">179亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">001318</td>
+  <td class="name">阳光乳业</td>
+  <td class="bl">首板</td>
+  <td class="t">14:29:27</td>
+  <td class="fd">0.30</td>
+  <td class="am">7.9</td>
+  <td class="cap cap-s">45亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">002652</td>
+  <td class="name">扬子新材<i class="tg fanbao">反包</i></td>
+  <td class="bl">1+1</td>
+  <td class="t">14:32:00</td>
+  <td class="fd">0.19</td>
+  <td class="am">3.7</td>
+  <td class="cap cap-s">21亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>传媒娱乐</h2>
+    <span class="cnt">5 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 3</span>
+  </header>
+  <div class="subs">细分标签：AI影视、AI漫剧、出版发行、微短剧、数字出版、游戏</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">600892</td>
+  <td class="name">大晟文化<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">2板</td>
+  <td class="t">09:25:00</td>
+  <td class="fd">2.49</td>
+  <td class="am">0.3</td>
+  <td class="cap cap-s">27亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">600715</td>
+  <td class="name">文投控股<i class="tg fanbao">反包</i><i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">3+2</td>
+  <td class="t">14:54:57</td>
+  <td class="fd">0.14</td>
+  <td class="am">16.0</td>
+  <td class="cap cap-s">70亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">601599</td>
+  <td class="name">浙文影业<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「纺织制造」与题材「传媒娱乐」不符，疑似蹭概念/跨界">⚠异业 纺织制造</i></td>
+  <td class="bl">2板</td>
+  <td class="t">09:25:00</td>
+  <td class="fd">1.56</td>
+  <td class="am">1.0</td>
+  <td class="cap cap-s">44亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">605577</td>
+  <td class="name">龙版传媒<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">2板</td>
+  <td class="t">09:25:02</td>
+  <td class="fd">1.58</td>
+  <td class="am">0.5</td>
+  <td class="cap cap-s">64亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">603258</td>
+  <td class="name">电魂网络<i class="tg">👑身位</i></td>
+  <td class="bl">2板</td>
+  <td class="t">13:59:08</td>
+  <td class="fd">0.21</td>
+  <td class="am">3.1</td>
+  <td class="cap cap-s">40亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>机器人</h2>
+    <span class="cnt">5 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 3</span>
+  </header>
+  <div class="subs">细分标签：人形机器人、外骨骼机器人、机器人布局、机器人概念、机器人焊接材料</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">002578</td>
+  <td class="name">闽发铝业<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「工业金属」与题材「机器人」不符，疑似蹭概念/跨界">⚠异业 工业金属</i></td>
+  <td class="bl">2板</td>
+  <td class="t">13:01:45</td>
+  <td class="fd">0.24</td>
+  <td class="am">2.9</td>
+  <td class="cap cap-s">32亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">000591</td>
+  <td class="name">太阳能<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「电力」与题材「机器人」不符，疑似蹭概念/跨界">⚠异业 电力</i></td>
+  <td class="bl">首板</td>
+  <td class="t">10:57:15</td>
+  <td class="fd">0.91</td>
+  <td class="am">7.7</td>
+  <td class="cap cap-m">179亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">002105</td>
+  <td class="name">信隆健康<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「摩托车及其他」与题材「机器人」不符，疑似蹭概念/跨界">⚠异业 摩托车及其他</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:31:42</td>
+  <td class="fd">0.32</td>
+  <td class="am">0.5</td>
+  <td class="cap cap-s">20亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">603381</td>
+  <td class="name">永臻股份<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「光伏设备」与题材「机器人」不符，疑似蹭概念/跨界">⚠异业 光伏设备</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:36:09</td>
+  <td class="fd">0.44</td>
+  <td class="am">0.9</td>
+  <td class="cap cap-s">22亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">600558</td>
+  <td class="name">大西洋<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:39:31</td>
+  <td class="fd">0.86</td>
+  <td class="am">4.5</td>
+  <td class="cap cap-s">56亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>算力/数据中心</h2>
+    <span class="cnt">5 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 3</span>
+  </header>
+  <div class="subs">细分标签：AI服务器、智算业务、液冷、液冷储能、液冷铝材、算力</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">002578</td>
+  <td class="name">闽发铝业<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「工业金属」与题材「算力/数据中心」不符，疑似蹭概念/跨界">⚠异业 工业金属</i></td>
+  <td class="bl">2板</td>
+  <td class="t">13:01:45</td>
+  <td class="fd">0.24</td>
+  <td class="am">2.9</td>
+  <td class="cap cap-s">32亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">002580</td>
+  <td class="name">圣阳股份<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「电池」与题材「算力/数据中心」不符，疑似蹭概念/跨界">⚠异业 电池</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:37:06</td>
+  <td class="fd">2.57</td>
+  <td class="am">7.2</td>
+  <td class="cap cap-s">84亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">603906</td>
+  <td class="name">龙蟠科技<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「电池」与题材「算力/数据中心」不符，疑似蹭概念/跨界">⚠异业 电池</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:47:13</td>
+  <td class="fd">0.77</td>
+  <td class="am">3.6</td>
+  <td class="cap cap-s">88亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">000608</td>
+  <td class="name">阳光股份<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「房地产开发」与题材「算力/数据中心」不符，疑似蹭概念/跨界">⚠异业 房地产开发</i></td>
+  <td class="bl">首板</td>
+  <td class="t">14:19:54</td>
+  <td class="fd">0.33</td>
+  <td class="am">2.3</td>
+  <td class="cap cap-s">36亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">002992</td>
+  <td class="name">宝明科技<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「光学光电子」与题材「算力/数据中心」不符，疑似蹭概念/跨界">⚠异业 光学光电子</i></td>
+  <td class="bl">首板</td>
+  <td class="t">14:25:21</td>
+  <td class="fd">0.01</td>
+  <td class="am">1.7</td>
+  <td class="cap cap-s">48亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>电力</h2>
+    <span class="cnt">4 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 2</span>
+  </header>
+  <div class="subs">细分标签：储能、光伏、光伏电站、光伏边框</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">002578</td>
+  <td class="name">闽发铝业<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「工业金属」与题材「电力」不符，疑似蹭概念/跨界">⚠异业 工业金属</i></td>
+  <td class="bl">2板</td>
+  <td class="t">13:01:45</td>
+  <td class="fd">0.24</td>
+  <td class="am">2.9</td>
+  <td class="cap cap-s">32亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">000591</td>
+  <td class="name">太阳能<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">10:57:15</td>
+  <td class="fd">0.91</td>
+  <td class="am">7.7</td>
+  <td class="cap cap-m">179亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">603381</td>
+  <td class="name">永臻股份<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:36:09</td>
+  <td class="fd">0.44</td>
+  <td class="am">0.9</td>
+  <td class="cap cap-s">22亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">000151</td>
+  <td class="name">中成股份<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「贸易Ⅱ」与题材「电力」不符，疑似蹭概念/跨界">⚠异业 贸易Ⅱ</i></td>
+  <td class="bl">首板</td>
+  <td class="t">14:23:36</td>
+  <td class="fd">0.12</td>
+  <td class="am">1.7</td>
+  <td class="cap cap-s">29亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>海峡两岸</h2>
+    <span class="cnt">3 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 1</span>
+  </header>
+  
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">002029</td>
+  <td class="name">七匹狼<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">2板</td>
+  <td class="t">09:32:27</td>
+  <td class="fd">1.11</td>
+  <td class="am">3.5</td>
+  <td class="cap cap-s">69亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">002300</td>
+  <td class="name">太阳电缆</td>
+  <td class="bl">首板</td>
+  <td class="t">10:27:54</td>
+  <td class="fd">0.53</td>
+  <td class="am">7.6</td>
+  <td class="cap cap-s">63亿</td>
+</tr><tr class="r-follower">
+  <td class="role">小弟</td>
+  <td class="code">601566</td>
+  <td class="name">九牧王</td>
+  <td class="bl">首板</td>
+  <td class="t">11:01:00</td>
+  <td class="fd">0.67</td>
+  <td class="am">6.4</td>
+  <td class="cap cap-s">66亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>CPO/光模块</h2>
+    <span class="cnt">2 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 0</span>
+  </header>
+  <div class="subs">细分标签：光纤油膏、激光通信</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">600261</td>
+  <td class="name">阳光照明<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「照明设备Ⅱ」与题材「CPO/光模块」不符，疑似蹭概念/跨界">⚠异业 照明设备Ⅱ</i></td>
+  <td class="bl">4板</td>
+  <td class="t">09:35:56</td>
+  <td class="fd">1.99</td>
+  <td class="am">16.8</td>
+  <td class="cap cap-s">66亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">002522</td>
+  <td class="name">浙江众成<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「塑料」与题材「CPO/光模块」不符，疑似蹭概念/跨界">⚠异业 塑料</i></td>
+  <td class="bl">首板</td>
+  <td class="t">14:43:21</td>
+  <td class="fd">0.84</td>
+  <td class="am">3.5</td>
+  <td class="cap cap-s">46亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>军工/低空经济</h2>
+    <span class="cnt">2 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 0</span>
+  </header>
+  <div class="subs">细分标签：商业航天、航空航天</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">600261</td>
+  <td class="name">阳光照明<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「照明设备Ⅱ」与题材「军工/低空经济」不符，疑似蹭概念/跨界">⚠异业 照明设备Ⅱ</i></td>
+  <td class="bl">4板</td>
+  <td class="t">09:35:56</td>
+  <td class="fd">1.99</td>
+  <td class="am">16.8</td>
+  <td class="cap cap-s">66亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">600558</td>
+  <td class="name">大西洋<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:39:31</td>
+  <td class="fd">0.86</td>
+  <td class="am">4.5</td>
+  <td class="cap cap-s">56亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>地产/家居</h2>
+    <span class="cnt">2 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 0</span>
+  </header>
+  <div class="subs">细分标签：商业物业、陶瓷纤维</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">002088</td>
+  <td class="name">鲁阳节能<i class="tg fanbao">反包</i><i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">1+1</td>
+  <td class="t">09:39:27</td>
+  <td class="fd">0.29</td>
+  <td class="am">1.2</td>
+  <td class="cap cap-s">42亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">000608</td>
+  <td class="name">阳光股份<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">14:19:54</td>
+  <td class="fd">0.33</td>
+  <td class="am">2.3</td>
+  <td class="cap cap-s">36亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>汽车</h2>
+    <span class="cnt">2 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 0</span>
+  </header>
+  <div class="subs">细分标签：一体化压铸、汽车检具、汽车注塑</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">002058</td>
+  <td class="name">紫竹高科<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「电池」与题材「汽车」不符，疑似蹭概念/跨界">⚠异业 电池</i></td>
+  <td class="bl">2板</td>
+  <td class="t">09:48:48</td>
+  <td class="fd">0.73</td>
+  <td class="am">2.5</td>
+  <td class="cap cap-s">30亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">603289</td>
+  <td class="name">泰瑞机器<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:25:04</td>
+  <td class="fd">0.34</td>
+  <td class="am">0.5</td>
+  <td class="cap cap-s">30亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>电线电缆</h2>
+    <span class="cnt">2 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 0</span>
+  </header>
+  
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">002692</td>
+  <td class="name">远程股份<i class="tg">👑身位</i><i class="tg">⚡最早</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:30:06</td>
+  <td class="fd">0.36</td>
+  <td class="am">0.4</td>
+  <td class="cap cap-s">30亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">002300</td>
+  <td class="name">太阳电缆<i class="tg">👑身位</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">10:27:54</td>
+  <td class="fd">0.53</td>
+  <td class="am">7.6</td>
+  <td class="cap cap-s">63亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>磷酸铁锂</h2>
+    <span class="cnt">2 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 0</span>
+  </header>
+  
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">603906</td>
+  <td class="name">龙蟠科技<i class="tg">👑身位</i><i class="tg">⚡最早</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:47:13</td>
+  <td class="fd">0.77</td>
+  <td class="am">3.6</td>
+  <td class="cap cap-s">88亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">002805</td>
+  <td class="name">丰元股份<i class="tg">👑身位</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">10:03:33</td>
+  <td class="fd">0.89</td>
+  <td class="am">3.0</td>
+  <td class="cap cap-s">40亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>资源/周期</h2>
+    <span class="cnt">2 只涨停</span>
+    <span class="roles">龙头 1 · 中军 1 · 小弟 0</span>
+  </header>
+  <div class="subs">细分标签：水泥熟料、铝塑膜</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">002058</td>
+  <td class="name">紫竹高科<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「电池」与题材「资源/周期」不符，疑似蹭概念/跨界">⚠异业 电池</i></td>
+  <td class="bl">2板</td>
+  <td class="t">09:48:48</td>
+  <td class="fd">0.73</td>
+  <td class="am">2.5</td>
+  <td class="cap cap-s">30亿</td>
+</tr><tr class="r-mid">
+  <td class="role">中军</td>
+  <td class="code">600802</td>
+  <td class="name">福建水泥<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">首板</td>
+  <td class="t">10:05:49</td>
+  <td class="fd">0.33</td>
+  <td class="am">5.0</td>
+  <td class="cap cap-s">34亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>农业</h2>
+    <span class="cnt">1 只涨停</span>
+    <span class="roles">龙头 1 · 中军 0 · 小弟 0</span>
+  </header>
+  <div class="subs">细分标签：海参养殖</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">002086</td>
+  <td class="name">东方海洋<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i></td>
+  <td class="bl">4板</td>
+  <td class="t">10:05:30</td>
+  <td class="fd">2.16</td>
+  <td class="am">7.9</td>
+  <td class="cap cap-s">54亿</td>
+</tr></tbody>
+  </table>
+</section><section class="card">
+  <header>
+    <h2>医药</h2>
+    <span class="cnt">1 只涨停</span>
+    <span class="roles">龙头 1 · 中军 0 · 小弟 0</span>
+  </header>
+  <div class="subs">细分标签：医疗服务</div>
+  <table>
+    <thead><tr><th>角色</th><th>代码</th><th>名称</th><th>连板</th><th>首封</th><th>封单(亿)</th><th>成交额(亿)</th><th>流通市值</th></tr></thead>
+    <tbody><tr class="r-leader">
+  <td class="role">龙头</td>
+  <td class="code">600327</td>
+  <td class="name">大东方<i class="tg">👑身位</i><i class="tg">⚡最早</i><i class="tg">💰封单</i><i class="tg offind" title="所属行业「一般零售」与题材「医药」不符，疑似蹭概念/跨界">⚠异业 一般零售</i></td>
+  <td class="bl">首板</td>
+  <td class="t">09:57:28</td>
+  <td class="fd">0.23</td>
+  <td class="am">2.1</td>
+  <td class="cap cap-s">38亿</td>
+</tr></tbody>
+  </table>
+</section>
+<section class="card soft">
+  <header><h2>单票题材</h2><span class="cnt gray">46 只</span>
+  <span class="roles">只有 1 只涨停 / 事件驱动标签，无板块效应，不划角色</span></header>
+  <table><thead><tr><th>代码</th><th>名称</th><th>连板</th><th>标签</th></tr></thead><tbody><tr><td class="code">000151</td><td class="name">中成股份</td><td class="bl">首板</td><td class="tag">成套设备出口</td></tr><tr><td class="code">000599</td><td class="name">青岛双星</td><td class="bl">2板</td><td class="tag">轮胎</td></tr><tr><td class="code">000599</td><td class="name">青岛双星</td><td class="bl">2板</td><td class="tag">锦湖并表</td></tr><tr><td class="code">000599</td><td class="name">青岛双星</td><td class="bl">2板</td><td class="tag">并购重组</td></tr><tr><td class="code">000608</td><td class="name">阳光股份</td><td class="bl">首板</td><td class="tag">“羊字辈”</td></tr><tr><td class="code">000679</td><td class="name">大连友谊</td><td class="bl">首板</td><td class="tag">进出口贸易</td></tr><tr><td class="code">000995</td><td class="name">皇台酒业</td><td class="bl">3板</td><td class="tag">老窖池</td></tr><tr><td class="code">000995</td><td class="name">皇台酒业</td><td class="bl">3板</td><td class="tag">董事会换届</td></tr><tr><td class="code">001318</td><td class="name">阳光乳业</td><td class="bl">首板</td><td class="tag">低温乳制品</td></tr><tr><td class="code">002029</td><td class="name">七匹狼</td><td class="bl">2板</td><td class="tag">夹克男装</td></tr><tr><td class="code">002029</td><td class="name">七匹狼</td><td class="bl">2板</td><td class="tag">基金备案</td></tr><tr><td class="code">002086</td><td class="name">东方海洋</td><td class="bl">4板</td><td class="tag">体外诊断</td></tr><tr><td class="code">002086</td><td class="name">东方海洋</td><td class="bl">4板</td><td class="tag">水溶性维生素试剂</td></tr><tr><td class="code">002105</td><td class="name">信隆健康</td><td class="bl">首板</td><td class="tag">自行车配件</td></tr><tr><td class="code">002292</td><td class="name">奥飞娱乐</td><td class="bl">2板</td><td class="tag">智能内容制作</td></tr><tr><td class="code">002292</td><td class="name">奥飞娱乐</td><td class="bl">2板</td><td class="tag">喜羊羊</td></tr><tr><td class="code">002292</td><td class="name">奥飞娱乐</td><td class="bl">2板</td><td class="tag">潮玩品牌</td></tr><tr><td class="code">002300</td><td class="name">太阳电缆</td><td class="bl">首板</td><td class="tag">海底电缆</td></tr><tr><td class="code">002522</td><td class="name">浙江众成</td><td class="bl">首板</td><td class="tag">POF热收缩膜</td></tr><tr><td class="code">002652</td><td class="name">扬子新材</td><td class="bl">1+1</td><td class="tag">有机涂层板</td></tr><tr><td class="code">002652</td><td class="name">扬子新材</td><td class="bl">1+1</td><td class="tag">高洁净板</td></tr><tr><td class="code">002696</td><td class="name">百洋股份</td><td class="bl">首板</td><td class="tag">水产加工</td></tr><tr><td class="code">002805</td><td class="name">丰元股份</td><td class="bl">首板</td><td class="tag">比亚迪合作</td></tr><tr><td class="code">002827</td><td class="name">高争民爆</td><td class="bl">2板</td><td class="tag">民爆</td></tr><tr><td class="code">301513</td><td class="name">尚水智能</td><td class="bl">首板</td><td class="tag">制浆龙头</td></tr><tr><td class="code">600261</td><td class="name">阳光照明</td><td class="bl">4板</td><td class="tag">照明</td></tr><tr><td class="code">600293</td><td class="name">三峡新材</td><td class="bl">2板</td><td class="tag">赛纬重组</td></tr><tr><td class="code">600293</td><td class="name">三峡新材</td><td class="bl">2板</td><td class="tag">浮法玻璃</td></tr><tr><td class="code">600358</td><td class="name">国旅联合</td><td class="bl">首板</td><td class="tag">互联网营销</td></tr><tr><td class="code">600358</td><td class="name">国旅联合</td><td class="bl">首板</td><td class="tag">饮用水</td></tr><tr><td class="code">600558</td><td class="name">大西洋</td><td class="bl">首板</td><td class="tag">可控核聚变</td></tr><tr><td class="code">600715</td><td class="name">文投控股</td><td class="bl">3+2</td><td class="tag">影院多元业态</td></tr><tr><td class="code">600778</td><td class="name">友好集团</td><td class="bl">首板</td><td class="tag">新疆商业</td></tr><tr><td class="code">600778</td><td class="name">友好集团</td><td class="bl">首板</td><td class="tag">京东租赁</td></tr><tr><td class="code">600802</td><td class="name">福建水泥</td><td class="bl">首板</td><td class="tag">重点工程</td></tr><tr><td class="code">601123</td><td class="name">马矿股份</td><td class="bl">首板</td><td class="tag">铁精粉</td></tr><tr><td class="code">601123</td><td class="name">马矿股份</td><td class="bl">首板</td><td class="tag">采选扩能</td></tr><tr><td class="code">601188</td><td class="name">龙江交通</td><td class="bl">首板</td><td class="tag">高速公路运营</td></tr><tr><td class="code">601566</td><td class="name">九牧王</td><td class="bl">首板</td><td class="tag">羊毛羊绒</td></tr><tr><td class="code">601566</td><td class="name">九牧王</td><td class="bl">首板</td><td class="tag">男裤</td></tr><tr><td class="code">601566</td><td class="name">九牧王</td><td class="bl">首板</td><td class="tag">太空裤</td></tr><tr><td class="code">603258</td><td class="name">电魂网络</td><td class="bl">2板</td><td class="tag">衍生品</td></tr><tr><td class="code">603289</td><td class="name">泰瑞机器</td><td class="bl">首板</td><td class="tag">海外业务</td></tr><tr><td class="code">605378</td><td class="name">野马电池</td><td class="bl">首板</td><td class="tag">海外基地</td></tr><tr><td class="code">605388</td><td class="name">均瑶健康</td><td class="bl">首板</td><td class="tag">益生菌出海</td></tr><tr><td class="code">605388</td><td class="name">均瑶健康</td><td class="bl">首板</td><td class="tag">菌株研发</td></tr></tbody></table>
+</section>
+<footer class="note">
+  <h3>说明</h3>
+  <p>1）题材按工作台 THEME_RULES 归并（"业绩"类不参与），与手机端看板口径一致。</p>
+  <p>2）中军目前只从<b>当日涨停池</b>里选（数据源限制，未涨停的题材权重股不在池内）。若要纳入未涨停的真中军，需要接通达信本地板块成分或同花顺题材成分。</p>
+  <p>3）下一步落地到通达信：你的自定义板块 90 个槽位已占满，写入前需要你确认覆盖范围。</p>
+</footer>
+</main></body></html>
