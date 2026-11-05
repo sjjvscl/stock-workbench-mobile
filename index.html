@@ -2716,6 +2716,19 @@ function renderRoles(){
     let items = [{s:g.leader, r: topRole}]
       .concat(g.mids.filter(keep).map(s=>({s, r: oRole || (s.__space ? "leader" : "mid")})))
       .concat(g.followers.filter(keep).map(s=>({s, r: oRole || (s.__space ? "leader" : "follower")})));
+    // 2026-11-05 用户要求：组内「空间龙」全部提前（跟在龙头之后、中军之前）。
+    // 起因：一个板块里出现两只全市场最高板时，第二只会落进 followers 数组，
+    // 角色判定是对的（标空间龙、渲染也用龙头底纹），但行位置沉在中军后面，
+    // 11-04 AI视频 龙版传媒 3 板却排第 4 行，角色标签与位置互相打架。
+    // ⚠ 只在默认的按角色模式生效；点「首封 / 溢价」是整组重排，不能被这里盖掉。
+    // ⚠ 用稳定排序（ES2019 起 sort 稳定），同角色内保持原次序：连板高 → 首封早 → 封单大。
+    if(!oRole && rmode === 'role'){
+      const RR = {leader:0, vanguard:1, mid:2, follower:3};
+      items = items.slice().sort((A,B)=>{
+        const ra = (RR[A.r]===undefined?9:RR[A.r]), rb = (RR[B.r]===undefined?9:RR[B.r]);
+        return ra - rb;
+      });
+    }
     if(rmode === 'first'){
       items = items.slice().sort((A,B)=>{
         const af = String(A.s.first||'99:99:99').slice(0,8);
